@@ -4,6 +4,40 @@
 @media(max-width:900px){.layout{grid-template-columns:1fr}.video-card{min-height:220px}.messages{height:60vh;min-height:420px;max-height:680px}.side{min-height:0}}@media(max-width:760px){header{height:64px}.tag{display:none}main{width:96vw;margin:18px auto}.mode-grid{grid-template-columns:1fr;gap:9px}.mode-card{padding:15px}.intro h1{letter-spacing:-1px}.video-grid{padding:10px;gap:8px}.video-card{min-height:150px}.messages{height:55vh;min-height:360px;max-height:560px}.side{min-height:0}}
 
 
+
+/* Pro layout: keep the main chat controls and composer visible on desktop */
+@media (min-width: 901px) {
+  header { height: 60px; padding-inline: 3vw; }
+  main { margin: 10px auto; }
+  .intro { margin-bottom: 10px; }
+  .intro h1 { font-size: clamp(27px, 3vw, 38px); margin: 4px 0; }
+  .intro p { margin: 4px 0; font-size: 13px; }
+  .mode-grid { margin-bottom: 10px; gap: 10px; }
+  .mode-card { padding: 10px 14px; }
+  .mode-icon { width: 38px; height: 38px; }
+  .layout { height: calc(100svh - 285px); min-height: 350px; align-items: stretch; }
+  .layout:has(#videoPanel.hidden) { grid-template-columns: minmax(0, 1fr); max-width: 1050px; margin-inline: auto; }
+  .layout:has(#videoPanel:not(.hidden)) { grid-template-columns: minmax(0, 1.5fr) minmax(340px, .9fr); }
+  .panel { min-height: 0; }
+  .side { height: 100%; }
+  .chat-head { padding: 10px 14px; flex-wrap: wrap; align-items: center; }
+  .chat-head .controls { padding: 0 !important; gap: 6px; }
+  .btn { padding: 9px 11px; }
+  .messages { height: auto; min-height: 0; max-height: none; flex: 1 1 0; padding: 12px 16px; }
+  .compose { padding: 9px 12px; }
+  .safety { padding: 8px 12px; }
+  .video-grid { min-height: 0; }
+  .video-card { min-height: 0; height: 100%; aspect-ratio: auto; }
+  .bottom { margin: 10px; }
+}
+@media (max-width: 900px) {
+  .layout { height: auto; }
+  .layout:has(#videoPanel.hidden) { grid-template-columns: 1fr; }
+  .messages { height: 48vh; min-height: 300px; max-height: 560px; }
+  .chat-head { flex-wrap: wrap; }
+  .chat-head .controls { width: 100%; padding: 0 !important; }
+}
+
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
