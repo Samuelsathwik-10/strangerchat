@@ -107,10 +107,9 @@
 }
 
 
-/* Mirror only the local self-preview, like familiar video-chat apps.
-   The stranger's video remains in its normal orientation. */
-#localVideo { transform: scaleX(-1); }
-#remoteVideo { transform: none; }
+/* Show the local camera in its normal, non-mirrored orientation. */
+#localVideo { transform: none !important; }
+#remoteVideo { transform: none !important; }
 
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
