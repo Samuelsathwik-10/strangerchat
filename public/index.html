@@ -107,15 +107,43 @@
 }
 
 
-/* Show the local camera in its normal, non-mirrored orientation. */
-#localVideo { transform: none !important; }
-#remoteVideo { transform: none !important; }
 
-
-/* Fill both video cards consistently, avoiding letterbox bars. */
-#localVideo, #remoteVideo {
+/* Final camera display: normal orientation on both sides, consistent framing. */
+#localVideo,
+#remoteVideo {
+  transform: none !important;
   object-fit: cover !important;
-  background: #07070d;
+  width: 100%;
+  height: 100%;
+}
+
+/* Match the video stage to widescreen camera feeds to minimize crop/zoom. */
+@media (min-width: 901px) {
+  #videoPanel .video-grid {
+    align-items: stretch;
+  }
+  #videoPanel .video-card {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    height: auto;
+    align-self: center;
+  }
+  #videoPanel .video-card video {
+    position: absolute;
+    inset: 0;
+  }
+}
+@media (max-width: 900px) {
+  #videoPanel .video-card {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+}
+@media (max-width: 560px) {
+  #videoPanel .video-card {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
 }
 
 </style></head><body>
