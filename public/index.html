@@ -46,6 +46,66 @@
   .mode-grid { margin-top: 8px; }
 }
 
+
+/* Final responsive layout */
+@media (min-width: 901px) {
+  header { height: 58px; padding: 0 3vw; }
+  main { margin: 8px auto; }
+  .intro { display: none; }
+  .mode-grid { margin: 8px 0 10px; gap: 10px; }
+  .mode-card { padding: 9px 13px; }
+  .mode-icon { width: 36px; height: 36px; }
+  .layout { height: calc(100svh - 178px); min-height: 430px; gap: 14px; align-items: stretch; }
+  .layout:has(#videoPanel.hidden) {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1080px;
+    margin-inline: auto;
+  }
+  .layout:has(#videoPanel:not(.hidden)) {
+    grid-template-columns: minmax(0, 1.8fr) minmax(320px, .82fr);
+  }
+  #videoPanel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #videoPanel .caption { flex: 0 0 auto; padding: 9px 14px; }
+  #videoPanel .video-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 10px;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  #videoPanel .video-card {
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+    border-radius: 14px;
+  }
+  #videoPanel .video-card video { object-fit: cover; }
+  #videoPanel .controls { flex: 0 0 auto; padding: 0 10px 8px; }
+  #videoPanel .hint { flex: 0 0 auto; padding: 7px 10px; }
+  .side { height: 100%; min-height: 0; }
+  .chat-head { flex: 0 0 auto; padding: 10px 12px; }
+  .messages { flex: 1 1 0; min-height: 0; height: auto; max-height: none; padding: 12px; }
+  .compose { flex: 0 0 auto; padding: 9px; }
+  .side > .controls { flex: 0 0 auto; padding: 9px; }
+  .safety { flex: 0 0 auto; padding: 8px 10px; }
+  .bottom { margin: 6px; }
+}
+@media (max-width: 900px) {
+  .layout { height: auto; min-height: 0; }
+  #videoPanel .video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #videoPanel .video-card { min-height: clamp(210px, 38vw, 340px); aspect-ratio: 4 / 3; }
+  .messages { height: 48vh; min-height: 300px; max-height: 560px; }
+}
+@media (max-width: 560px) {
+  #videoPanel .video-grid { grid-template-columns: 1fr; }
+  #videoPanel .video-card { min-height: 240px; }
+}
+
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
