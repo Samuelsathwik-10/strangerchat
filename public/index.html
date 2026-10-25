@@ -69,6 +69,15 @@ body:has(#videoPanel.hidden) .messages{min-height:clamp(250px,42vh,500px);max-he
   .messages{min-height:170px;max-height:250px;padding:10px}.compose{padding:7px}
   .safety,.hint{font-size:10px}
 }
+
+/* Single targeted fix: show the stranger's complete camera frame */
+#remoteVideo {
+  object-fit: contain !important;
+  object-position: center center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
