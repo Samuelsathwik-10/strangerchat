@@ -9,7 +9,7 @@
 @media (min-width: 901px) {
   header { height: 60px; padding-inline: 3vw; }
   main { margin: 10px auto; }
-  .intro { margin-bottom: 10px; }
+  .intro { display:none; }
   .intro h1 { font-size: clamp(27px, 3vw, 38px); margin: 4px 0; }
   .intro p { margin: 4px 0; font-size: 13px; }
   .mode-grid { margin-bottom: 10px; gap: 10px; }
@@ -21,7 +21,7 @@
   .panel { min-height: 0; }
   .side { height: 100%; }
   .chat-head { padding: 10px 14px; flex-wrap: wrap; align-items: center; }
-  .chat-head .controls { padding: 0 !important; gap: 6px; }
+  .side > .controls { padding: 10px 12px; gap: 6px; border-top: 1px solid var(--line); }
   .btn { padding: 9px 11px; }
   .messages { height: auto; min-height: 0; max-height: none; flex: 1 1 0; padding: 12px 16px; }
   .compose { padding: 9px 12px; }
@@ -35,7 +35,15 @@
   .layout:has(#videoPanel.hidden) { grid-template-columns: 1fr; }
   .messages { height: 48vh; min-height: 300px; max-height: 560px; }
   .chat-head { flex-wrap: wrap; }
-  .chat-head .controls { width: 100%; padding: 0 !important; }
+  .side > .controls { width: 100%; padding: 10px 12px; }
+}
+
+
+.side > .controls { display:flex; flex-wrap:wrap; align-items:center; }
+.side > .controls .btn { flex: 0 0 auto; }
+@media (min-width:901px) {
+  .layout { height: calc(100svh - 175px); min-height: 400px; }
+  .mode-grid { margin-top: 8px; }
 }
 
 </style></head><body>
@@ -43,7 +51,7 @@
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
 <section class="mode-grid"><button class="mode-card selected" id="chatModeBtn"><span class="mode-icon">✦</span><span class="mode-copy"><strong>Text chat</strong><small>No camera. Just conversation.</small></span><span class="arrow">↗</span></button><button class="mode-card" id="videoModeBtn"><span class="mode-icon">◉</span><span class="mode-copy"><strong>Video chat</strong><small>Face-to-face, with text too.</small></span><span class="arrow">↗</span></button></section>
 <div class="layout"><section class="panel hidden" id="videoPanel"><div class="caption"><strong>Live video</strong><small>Video mode only</small></div><div class="video-grid"><div class="video-card"><video id="localVideo" autoplay muted playsinline></video><div class="placeholder" id="localPlaceholder"><div class="avatar">☺</div><b>Your camera</b><small>Preview appears here</small></div><span class="video-label">You</span></div><div class="video-card"><video id="remoteVideo" autoplay playsinline></video><div class="placeholder" id="remotePlaceholder"><div class="avatar">?</div><b>Stranger</b><small>Waiting for a connection</small></div><span class="video-label">Stranger</span></div></div><div class="controls"><button class="btn quiet" id="cameraBtn">Camera: On</button><button class="btn quiet" id="micBtn">Mic: On</button></div><div class="toast" id="toast"></div><div class="hint">Camera and microphone permission are requested only in Video Chat.</div></section>
-<section class="panel side"><div class="chat-head"><div class="controls" style="padding-top:12px"><button class="btn primary" id="findBtn">Find a stranger</button><button class="btn secondary" id="nextBtn" disabled>Next stranger</button><button class="btn quiet" id="leaveBtn" disabled>Leave</button></div><strong id="conversationTitle">Text conversation</strong><small id="partnerState">Not connected</small></div><div class="messages" id="messages"><div class="message system">Choose a mode, then find someone new.</div></div><form class="compose" id="chatForm"><input id="chatInput" placeholder="Write a friendly message…" maxlength="1000" autocomplete="off" disabled><button class="btn primary" id="sendBtn" disabled>Send</button></form><div class="safety">Be kind. Never share passwords, your address, or financial details. Leave conversations that make you uncomfortable.</div></section></div><div class="bottom">StrangerChat · One conversation at a time.</div></main>
+<section class="panel side"><div class="chat-head"><strong id="conversationTitle">Text conversation</strong><small id="partnerState">Not connected</small></div><div class="messages" id="messages"><div class="message system">Choose a mode, then find someone new.</div></div><form class="compose" id="chatForm"><input id="chatInput" placeholder="Write a friendly message…" maxlength="1000" autocomplete="off" disabled><button class="btn primary" id="sendBtn" disabled>Send</button></form><div class="controls" style="padding-top:12px"><button class="btn primary" id="findBtn">Find a stranger</button><button class="btn secondary" id="nextBtn" disabled>Next stranger</button><button class="btn quiet" id="leaveBtn" disabled>Leave</button></div><div class="safety">Be kind. Never share passwords, your address, or financial details. Leave conversations that make you uncomfortable.</div></section></div><div class="bottom">StrangerChat · One conversation at a time.</div></main>
 <script src="/socket.io/socket.io.js"></script><script>
 (()=>{const $=id=>document.getElementById(id),socket=io(),localVideo=$('localVideo'),remoteVideo=$('remoteVideo');let mode='chat',localStream=null,pc=null,partnerId=null,matched=false,searching=false,pending=[];
 const rtc={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
