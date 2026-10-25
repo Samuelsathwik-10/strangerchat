@@ -112,10 +112,9 @@
 #remoteVideo { transform: none !important; }
 
 
-/* Prevent the stranger's feed from looking zoomed or cropped.
-   Keep the full remote camera frame visible; local preview stays unchanged. */
-#remoteVideo {
-  object-fit: contain !important;
+/* Fill both video cards consistently, avoiding letterbox bars. */
+#localVideo, #remoteVideo {
+  object-fit: cover !important;
   background: #07070d;
 }
 
