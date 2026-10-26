@@ -25,143 +25,73 @@
 }
 
 
-/* Responsive full-screen layout and uncropped mirrored video */
-@media (min-width: 761px) {
-  html, body { width:100%; min-height:100%; margin:0; }
-  header { height:58px; min-height:58px; position:relative; flex-shrink:0; }
-  main { width:100%; max-width:none; margin:0; padding:12px 16px 4px; min-height:calc(100dvh - 58px); display:flex; flex-direction:column; }
-  .intro { margin-bottom:12px; }
-  .intro h1 { font-size:clamp(28px,3vw,40px); }
-  .mode-grid { flex-shrink:0; margin:0 0 12px; gap:10px; }
-  .mode-card { padding:10px 14px; }
-  .layout { flex:1 1 auto; min-height:0; grid-template-columns:minmax(0,3fr) minmax(280px,1fr); gap:12px; margin:0; width:100%; max-width:none; align-items:stretch; }
-  #videoPanel { min-height:0; display:flex; flex-direction:column; }
-  .caption { flex-shrink:0; padding:10px 14px; }
-  .video-grid { flex:1 1 auto; min-height:0; padding:8px; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .video-card { min-height:0; height:100%; aspect-ratio:auto; }
-  .video-card video { display:block; width:100%; height:100%; object-fit:contain; background:#07070d; }
-  #localVideo, #remoteVideo { transform:scaleX(-1); }
-  .controls, .hint { flex-shrink:0; }
-  .side { min-height:0; height:100%; }
-  .messages { flex:1 1 auto; min-height:0; max-height:none; }
-  .bottom { margin:6px 0 0; flex-shrink:0; }
-}
-@media (max-width:760px) {
-  main { width:100%; margin:0; padding:10px; }
-  .layout { grid-template-columns:minmax(0,1fr); }
-  .video-card { aspect-ratio:4/3; min-height:120px; }
-  .video-card video { width:100%; height:100%; object-fit:contain; }
-  #localVideo, #remoteVideo { transform:scaleX(-1); }
-}
-
-
-
-/* StrangerChat light theme inspired by classic Omegle-style chat layouts */
-:root {
-  color-scheme: light;
-  --bg: #f3f6fb;
-  --line: #d6dfeb;
-  --muted: #5c6b7e;
-  --purple: #1676d2;
-  --text: #182434;
-}
-html, body { background:#f3f6fb !important; color:#182434 !important; }
-body {
-  background: linear-gradient(180deg,#ffffff 0,#f4f7fb 240px,#eef3f8 100%) !important;
-  color:#182434 !important;
-  font-family: Arial, Helvetica, sans-serif !important;
-}
-header {
-  height:64px !important; min-height:64px; padding:0 24px !important;
-  background:#fff !important; border-bottom:1px solid #dce4ee !important;
-  box-shadow:0 2px 8px #1c35500a; position:relative !important;
-}
-.logo { color:#1676d2 !important; font-size:25px !important; letter-spacing:-.7px !important; }
-.logo span { color:#f28b26 !important; }
-.tag { color:#627186 !important; }
-.status { color:#334155 !important; background:#f5f8fc !important; border:1px solid #d8e1ec !important; }
-main {
-  width:100% !important; max-width:none !important; margin:0 !important;
-  padding:16px 18px 8px !important; min-height:calc(100dvh - 64px);
-  display:flex; flex-direction:column; box-sizing:border-box;
-}
-.intro { margin:0 0 12px !important; }
-.eyebrow { color:#1676d2 !important; letter-spacing:1.4px !important; }
-.intro h1 { color:#182434 !important; font-size:clamp(25px,3vw,36px) !important; letter-spacing:-.8px !important; margin:5px 0 !important; }
-.intro p { color:#5c6b7e !important; margin:6px 0 0 !important; font-size:15px !important; }
-.mode-grid { gap:10px !important; margin:0 0 12px !important; }
-.mode-card {
-  padding:12px 15px !important; color:#1e293b !important;
-  background:#fff !important; border:1px solid #d5dfeb !important;
-  border-radius:8px !important; box-shadow:0 2px 5px #243b5308 !important;
-}
-.mode-card:hover { transform:translateY(-1px); border-color:#8abbe9 !important; }
-.mode-card.selected { background:#eaf4ff !important; border-color:#2384d8 !important; box-shadow:inset 0 0 0 1px #2384d8 !important; }
-.mode-icon { width:40px !important; height:40px !important; border-radius:8px !important; background:#e3f0ff !important; color:#1676d2 !important; }
-.mode-copy small { color:#617186 !important; }
-.arrow { color:#1676d2 !important; }
+/* Balanced Omegle-inspired video/chat layout */
 .layout {
-  flex:1 1 auto; min-height:0; width:100% !important; max-width:none !important;
-  grid-template-columns:minmax(0,3fr) minmax(300px,1fr) !important;
-  gap:12px !important; margin:0 !important; align-items:stretch !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 340px) !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: none !important;
+  align-items: stretch !important;
 }
-.layout:has(#videoPanel.hidden) { grid-template-columns:minmax(0,1fr) !important; }
-.panel {
-  background:#fff !important; color:#182434 !important;
-  border:1px solid #d4deea !important; border-radius:8px !important;
-  box-shadow:0 3px 12px #1c35500b !important;
+#videoPanel {
+  min-width: 0 !important;
 }
-.caption, .chat-head { padding:12px 14px !important; background:#f8fafc !important; border-bottom:1px solid #dbe3ed !important; color:#1f2d3d !important; }
-.caption small, .chat-head small { color:#607086 !important; }
-#videoPanel { min-height:0; display:flex; flex-direction:column; }
-.video-grid { flex:1 1 auto; min-height:0; padding:10px !important; gap:10px !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-.video-card { min-height:0; height:100%; aspect-ratio:auto; background:#e8edf3 !important; border:1px solid #cbd6e2 !important; border-radius:6px !important; }
-.video-card video { display:block; width:100% !important; height:100% !important; object-fit:contain !important; background:#e8edf3 !important; }
-#localVideo, #remoteVideo { transform:scaleX(-1); }
-.placeholder { background:linear-gradient(145deg,#f5f8fc,#e7edf5) !important; color:#526276 !important; }
-.avatar { background:#dcecff !important; color:#1676d2 !important; }
-.video-label { color:#fff !important; background:#26384dcc !important; border-radius:4px !important; }
-.controls { gap:8px !important; }
-.btn { border-radius:6px !important; padding:10px 14px !important; cursor:pointer; }
-.primary { background:#1676d2 !important; color:#fff !important; border:1px solid #1268bc !important; }
-.primary:hover { background:#0f67bd !important; }
-.secondary { background:#f1f5f9 !important; color:#243447 !important; border:1px solid #cbd5e1 !important; }
-.quiet { background:#fff !important; color:#334155 !important; border:1px solid #cbd5e1 !important; }
-button:disabled { opacity:.48; }
-.messages { flex:1 1 auto; min-height:0; max-height:none !important; background:#fff !important; }
-.message { background:#edf2f7 !important; color:#263548 !important; border-radius:8px !important; }
-.message.me { background:#dceeff !important; color:#114b80 !important; }
-.message.system { color:#66768a !important; background:transparent !important; }
-.compose { background:#f8fafc !important; border-top:1px solid #dbe3ed !important; }
-input { background:#fff !important; color:#182434 !important; border:1px solid #cbd6e2 !important; border-radius:6px !important; }
-input:focus { outline:2px solid #b9dcff !important; border-color:#2384d8 !important; }
-.safety, .hint { background:#f8fafc !important; color:#64748b !important; border-top:1px solid #dbe3ed !important; }
-.toast { background:#fff0f0 !important; color:#a61b1b !important; border:1px solid #f0caca; }
-.bottom { color:#718096 !important; }
-@media (min-width:761px) {
-  html, body { width:100%; min-height:100%; margin:0; }
-  header { flex-shrink:0; }
-  main { min-height:calc(100dvh - 64px); }
-  .mode-grid { flex-shrink:0; }
-  .side { min-height:0; height:100%; }
-  .controls, .hint { flex-shrink:0; }
+.video-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
 }
-@media (max-width:760px) {
-  header { height:60px !important; min-height:60px; padding:0 12px !important; }
-  .tag { display:none; }
-  main { width:100% !important; margin:0 !important; padding:10px !important; min-height:calc(100dvh - 60px); }
-  .intro { margin-bottom:10px !important; }
-  .intro h1 { font-size:26px !important; letter-spacing:-.4px !important; }
-  .mode-grid { grid-template-columns:1fr 1fr !important; gap:8px !important; }
-  .mode-card { padding:10px !important; gap:8px !important; }
-  .mode-icon { width:34px !important; height:34px !important; }
-  .mode-copy strong { font-size:14px !important; }
-  .mode-copy small { font-size:11px !important; }
-  .layout, .layout:has(#videoPanel.hidden) { grid-template-columns:minmax(0,1fr) !important; }
-  .video-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-  .video-card { aspect-ratio:4/3; min-height:120px; }
-  .side { min-height:420px; }
-  .messages { min-height:180px; }
+.video-card {
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: 4 / 3 !important;
+}
+.video-card video,
+.video-grid video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  background: #08080d !important;
+}
+.side {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.messages {
+  min-height: 180px !important;
+  max-height: 42vh !important;
+}
+@media (min-width: 761px) {
+  main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 16px 20px !important;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+  }
+}
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .video-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .video-card {
+    aspect-ratio: 4 / 3 !important;
+    min-height: 110px !important;
+  }
+  .messages {
+    max-height: 32vh !important;
+  }
 }
 
 </style></head><body>
@@ -171,109 +101,26 @@ input:focus { outline:2px solid #b9dcff !important; border-color:#2384d8 !import
 <div class="layout"><section class="panel hidden" id="videoPanel"><div class="caption"><strong>Live video</strong><small>Video mode only</small></div><div class="video-grid"><div class="video-card"><video id="localVideo" autoplay muted playsinline></video><div class="placeholder" id="localPlaceholder"><div class="avatar">☺</div><b>Your camera</b><small>Preview appears here</small></div><span class="video-label">You</span></div><div class="video-card"><video id="remoteVideo" autoplay playsinline></video><div class="placeholder" id="remotePlaceholder"><div class="avatar">?</div><b>Stranger</b><small>Waiting for a connection</small></div><span class="video-label">Stranger</span></div></div><div class="controls"><button class="btn quiet" id="cameraBtn">Camera: On</button><button class="btn quiet" id="micBtn">Mic: On</button></div><div class="toast" id="toast"></div><div class="hint">Camera and microphone permission are requested only in Video Chat.</div></section>
 <section class="panel side"><div class="chat-head"><strong id="conversationTitle">Text conversation</strong><small id="partnerState">Not connected</small></div><div class="messages" id="messages"><div class="message system">Choose a mode, then find someone new.</div></div><form class="compose" id="chatForm"><input id="chatInput" placeholder="Write a friendly message…" maxlength="1000" autocomplete="off" disabled><button class="btn primary" id="sendBtn" disabled>Send</button></form><div class="controls" style="padding-top:12px"><button class="btn primary" id="findBtn">Find a stranger</button><button class="btn secondary" id="nextBtn" disabled>Next stranger</button><button class="btn quiet" id="leaveBtn" disabled>Leave</button></div><div class="safety">Be kind. Never share passwords, your address, or financial details. Leave conversations that make you uncomfortable.</div></section></div><div class="bottom">StrangerChat · One conversation at a time.</div></main>
 <script src="/socket.io/socket.io.js"></script><script>
-(()=>{
-  const $=id=>document.getElementById(id);
-  const socket=io();
-  const localVideo=$('localVideo'), remoteVideo=$('remoteVideo');
-  let mode='chat', localStream=null, pc=null, partnerId=null, matched=false, searching=false, pending=[];
-  const rtc={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
-  function status(t){$('status').textContent='● '+t}
-  function toast(t){$('toast').textContent=t;$('toast').style.display='block'}
-  function clearToast(){$('toast').style.display='none'}
-  function msg(t,type='system'){const e=document.createElement('div');e.className='message '+type;e.textContent=t;$('messages').appendChild(e);$('messages').scrollTop=$('messages').scrollHeight}
-  function resetRemote(){remoteVideo.srcObject=null;$('remotePlaceholder').style.display='flex'}
-  function stopMedia(){if(localStream)localStream.getTracks().forEach(t=>t.stop());localStream=null;localVideo.srcObject=null;$('localPlaceholder').style.display='flex';$('cameraBtn').textContent='Camera: On';$('micBtn').textContent='Mic: On'}
-  function closePeer(){if(pc)pc.close();pc=null;pending=[];resetRemote()}
-  async function media(){
-    if(localStream&&localStream.getTracks().some(t=>t.readyState==='live'))return;
-    if(!navigator.mediaDevices?.getUserMedia)throw Error('Camera needs HTTPS or localhost in a modern browser.');
-    localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-    localVideo.srcObject=localStream;$('localPlaceholder').style.display='none';
-  }
-  function makePC(){
-    if(pc&&pc.signalingState!=='closed')return pc;
-    pc=new RTCPeerConnection(rtc);const p=pc;
-    if(localStream)localStream.getTracks().forEach(t=>p.addTrack(t,localStream));
-    p.onicecandidate=e=>{if(e.candidate&&partnerId&&mode==='video')socket.emit('video-signal',{type:'ice-candidate',payload:e.candidate})};
-    p.ontrack=e=>{if(e.streams?.[0]){remoteVideo.srcObject=e.streams[0];$('remotePlaceholder').style.display='none'}};
-    p.onconnectionstatechange=()=>{if(p===pc&&p.connectionState==='connected')status('Video connected')};
-    return p;
-  }
-  async function offer(){const p=makePC(),o=await p.createOffer();await p.setLocalDescription(o);socket.emit('video-signal',{type:'offer',payload:p.localDescription})}
-  async function signal(d){
-    if(mode!=='video'||!d)return;
-    try{
-      if(d.type==='offer'){
-        const p=makePC();await p.setRemoteDescription(d.payload);
-        for(const c of pending)await p.addIceCandidate(c);pending=[];
-        const a=await p.createAnswer();await p.setLocalDescription(a);socket.emit('video-signal',{type:'answer',payload:p.localDescription});
-      }else if(d.type==='answer'){
-        if(!pc)return;await pc.setRemoteDescription(d.payload);
-        for(const c of pending)await pc.addIceCandidate(c);pending=[];
-      }else if(d.type==='ice-candidate'){
-        if(pc?.remoteDescription)await pc.addIceCandidate(d.payload);else pending.push(d.payload);
-      }
-    }catch(e){toast('Video setup issue: '+e.message)}
-  }
-  function choose(m){
-    if(mode===m)return;
-    if(matched||searching)leave();
-    mode=m;
-    $('chatModeBtn').classList.toggle('selected',m==='chat');
-    $('videoModeBtn').classList.toggle('selected',m==='video');
-    $('videoPanel').classList.toggle('hidden',m!=='video');
-    $('conversationTitle').textContent=m==='chat'?'Text conversation':'Video conversation';
-    $('messages').replaceChildren();
-    msg(m==='chat'?'Text mode selected. Your camera and microphone stay off.':'Video mode selected. Permission is requested when you start.');
-    $('partnerState').textContent='Not connected';
-    $('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;
-    $('findBtn').disabled=!socket.connected;status(socket.connected?'Ready when you are':'Connecting to server…');clearToast();
-  }
-  async function find(){
-    clearToast();
-    if(!socket.connected){status('Server unavailable — reconnecting…');msg('Cannot connect to the server yet. Please wait and try again.');return}
-    $('findBtn').disabled=true;$('nextBtn').disabled=true;$('leaveBtn').disabled=false;
-    if(partnerId)socket.emit('next-partner');
-    closePeer();partnerId=null;matched=false;searching=true;
-    if(mode==='video'){
-      try{await media()}catch(e){toast(e.message);$('findBtn').disabled=false;$('leaveBtn').disabled=true;searching=false;return}
-    }else stopMedia();
-    $('messages').replaceChildren();msg('Looking for someone…');
-    $('chatInput').disabled=$('sendBtn').disabled=true;$('partnerState').textContent='Searching…';status('Finding a stranger…');
-    socket.emit('find-partner',mode);
-  }
-  function leave(){
-    if(partnerId||searching)socket.emit('next-partner');
-    partnerId=null;matched=searching=false;closePeer();stopMedia();
-    $('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;
-    $('findBtn').disabled=!socket.connected;$('partnerState').textContent='Not connected';
-    $('messages').replaceChildren();msg('You left. Find someone new whenever you are ready.');status(socket.connected?'Ready when you are':'Connecting to server…');
-  }
-  $('chatModeBtn').onclick=()=>choose('chat');
-  $('videoModeBtn').onclick=()=>choose('video');
-  $('findBtn').onclick=e=>{e.preventDefault();find()};
-  $('nextBtn').onclick=e=>{e.preventDefault();find()};
-  $('leaveBtn').onclick=e=>{e.preventDefault();leave()};
-  $('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatInput').value.trim();if(!t||!matched||!socket.connected)return;socket.emit('send-message',t);msg(t,'me');$('chatInput').value=''};
-  $('cameraBtn').onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cameraBtn').textContent='Camera: '+(t.enabled?'On':'Off')}};
-  $('micBtn').onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('micBtn').textContent='Mic: '+(t.enabled?'On':'Off')}};
-  socket.on('connect',()=>{status('Connected to server');$('findBtn').disabled=false});
-  socket.on('connect_error',()=>{status('Server connection failed');$('findBtn').disabled=true});
-  socket.on('disconnect',()=>{status('Disconnected');matched=searching=false;partnerId=null;closePeer();stopMedia();$('findBtn').disabled=true;$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true});
-  socket.on('waiting',()=>{searching=true;status('Waiting for someone…');$('partnerState').textContent='Searching…';msg('Waiting for someone to join…')});
-  socket.on('matched',async d=>{
-    partnerId=d.partnerId;matched=true;searching=false;clearToast();$('messages').replaceChildren();msg('You’re connected. Say hello!');
-    $('partnerState').textContent='Connected';$('chatInput').disabled=$('sendBtn').disabled=false;
-    $('findBtn').disabled=false;$('nextBtn').disabled=$('leaveBtn').disabled=false;status('Matched with a stranger');
-    if(mode==='video'){try{await media();if(d.initiator)await offer()}catch(e){toast('Video issue: '+e.message)}}
-  });
-  socket.on('receive-message',t=>msg(typeof t==='string'?t:String(t?.text??''),''));
-  socket.on('video-signal',signal);
-  socket.on('partner-left',()=>{
-    matched=searching=false;partnerId=null;closePeer();if(mode==='video')stopMedia();
-    $('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;
-    $('findBtn').disabled=!socket.connected;$('partnerState').textContent='Stranger left';status('Stranger disconnected');msg('The stranger left. Find someone new.');
-  });
-  addEventListener('beforeunload',()=>{socket.disconnect();if(localStream)localStream.getTracks().forEach(t=>t.stop())});
+(()=>{const $=id=>document.getElementById(id),socket=io(),localVideo=$('localVideo'),remoteVideo=$('remoteVideo');let mode='chat',localStream=null,pc=null,partnerId=null,matched=false,searching=false,pending=[];
+const rtc={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
+function status(t){$('status').textContent='● '+t}function toast(t){$('toast').textContent=t;$('toast').style.display='block'}function clearToast(){$('toast').style.display='none'}
+function msg(t,type='system'){const e=document.createElement('div');e.className='message '+type;e.textContent=t;$('messages').appendChild(e);$('messages').scrollTop=$('messages').scrollHeight}
+function resetRemote(){remoteVideo.srcObject=null;$('remotePlaceholder').style.display='flex'}function stopMedia(){if(localStream)localStream.getTracks().forEach(t=>t.stop());localStream=null;localVideo.srcObject=null;$('localPlaceholder').style.display='flex'}
+function closePeer(){if(pc){pc.close()}pc=null;pending=[];resetRemote()}
+async function media(){if(localStream&&localStream.getTracks().some(t=>t.readyState==='live'))return;if(!navigator.mediaDevices?.getUserMedia)throw Error('Camera needs HTTPS or localhost in a modern browser.');localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});localVideo.srcObject=localStream;$('localPlaceholder').style.display='none'}
+function makePC(){if(pc&&pc.signalingState!=='closed')return pc;pc=new RTCPeerConnection(rtc);const p=pc;if(localStream)localStream.getTracks().forEach(t=>p.addTrack(t,localStream));p.onicecandidate=e=>{if(e.candidate&&partnerId&&mode==='video')socket.emit('video-signal',{type:'ice-candidate',payload:e.candidate})};p.ontrack=e=>{if(e.streams?.[0]){remoteVideo.srcObject=e.streams[0];$('remotePlaceholder').style.display='none'}};p.onconnectionstatechange=()=>{if(p===pc&&p.connectionState==='connected')status('Video connected')};return p}
+async function offer(){const p=makePC(),o=await p.createOffer();await p.setLocalDescription(o);socket.emit('video-signal',{type:'offer',payload:p.localDescription})}
+async function signal(d){if(mode!=='video'||!d)return;try{if(d.type==='offer'){const p=makePC();await p.setRemoteDescription(d.payload);for(const c of pending)await p.addIceCandidate(c);pending=[];const a=await p.createAnswer();await p.setLocalDescription(a);socket.emit('video-signal',{type:'answer',payload:p.localDescription})}else if(d.type==='answer'){if(!pc)return;await pc.setRemoteDescription(d.payload);for(const c of pending)await pc.addIceCandidate(c);pending=[]}else if(d.type==='ice-candidate'){if(pc?.remoteDescription)await pc.addIceCandidate(d.payload);else pending.push(d.payload)}}catch(e){toast('Video setup issue: '+e.message)}}
+function choose(m){if(matched||searching)leave();mode=m;$('chatModeBtn').classList.toggle('selected',m==='chat');$('videoModeBtn').classList.toggle('selected',m==='video');$('videoPanel').classList.toggle('hidden',m!=='video');$('conversationTitle').textContent=m==='chat'?'Text conversation':'Video conversation';$('messages').replaceChildren();msg(m==='chat'?'Text mode selected. Your camera and microphone stay off.':'Video mode selected. Permission is requested when you start.');$('partnerState').textContent='Not connected';$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;status('Ready when you are');clearToast()}
+async function find(){clearToast();$('findBtn').disabled=true;$('nextBtn').disabled=true;$('leaveBtn').disabled=false;if(partnerId)socket.emit('next-partner');closePeer();partnerId=null;matched=false;searching=true;if(mode==='video'){try{await media()}catch(e){toast(e.message);$('findBtn').disabled=false;$('leaveBtn').disabled=true;searching=false;return}}else stopMedia();$('messages').replaceChildren();msg('Looking for someone…');$('chatInput').disabled=$('sendBtn').disabled=true;$('partnerState').textContent='Searching…';status('Finding a stranger…');socket.emit('find-partner',mode)}
+function leave(){if(partnerId||searching)socket.emit('next-partner');partnerId=null;matched=searching=false;closePeer();stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Not connected';$('messages').replaceChildren();msg('You left. Find someone new whenever you are ready.');status('Ready when you are')}
+$('chatModeBtn').onclick=()=>choose('chat');$('videoModeBtn').onclick=()=>choose('video');$('findBtn').onclick=find;$('nextBtn').onclick=find;$('leaveBtn').onclick=leave;
+$('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatInput').value.trim();if(!t||!matched)return;socket.emit('send-message',t);msg(t,'me');$('chatInput').value=''};
+$('cameraBtn').onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cameraBtn').textContent='Camera: '+(t.enabled?'On':'Off')}};$('micBtn').onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('micBtn').textContent='Mic: '+(t.enabled?'On':'Off')}};
+socket.on('connect',()=>{status('Connected to server');$('findBtn').disabled=false});socket.on('disconnect',()=>{status('Disconnected');matched=searching=false;partnerId=null;closePeer();stopMedia();$('findBtn').disabled=false;$('chatInput').disabled=$('sendBtn').disabled=true});
+socket.on('waiting',()=>{searching=true;status('Waiting for someone…');$('partnerState').textContent='Searching…';msg('Waiting for someone to join…')});
+socket.on('matched',async d=>{partnerId=d.partnerId;matched=true;searching=false;clearToast();$('messages').replaceChildren();msg('You’re connected. Say hello!');$('partnerState').textContent='Connected';$('chatInput').disabled=$('sendBtn').disabled=false;$('findBtn').disabled=false;$('nextBtn').disabled=$('leaveBtn').disabled=false;status('Matched with a stranger');if(mode==='video'){try{await media();if(d.initiator)await offer()}catch(e){toast('Video issue: '+e.message)}}});
+socket.on('receive-message',t=>msg(String(t),''));socket.on('video-signal',signal);socket.on('partner-left',()=>{matched=searching=false;partnerId=null;closePeer();if(mode==='video')stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Stranger left';status('Stranger disconnected');msg('The stranger left. Find someone new.')});
+addEventListener('beforeunload',()=>{socket.disconnect();if(localStream)localStream.getTracks().forEach(t=>t.stop())})
 })();
 </script></body></html>
