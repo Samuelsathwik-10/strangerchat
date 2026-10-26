@@ -1,136 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>StrangerChat – Talk to Strangers</title>
-<style>
-:root{--bg:#0f1117;--panel:#1a1d27;--line:#2a2e3d;--txt:#eef0f6;--mut:#8b90a3;--acc:#7c5cff;--red:#ff4d5e}
-*{box-sizing:border-box;margin:0}
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,Segoe UI,Roboto,sans-serif}
-button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 20px;font-weight:600;color:#fff;background:var(--acc)}
-button.sec{background:var(--line)} button.red{background:var(--red)} button:disabled{opacity:.5}
-#home{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px}
-#home h1{font-size:2.6rem} #home p{color:var(--mut);max-width:420px}
-#home .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-#app{display:none;height:100%;flex-direction:column}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);font-weight:700}
-header small{color:var(--mut);font-weight:400}
-main{flex:1;display:flex;min-height:0}
-#videos{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px;min-width:0}
-.box{position:relative;flex:1;background:#000;border-radius:12px;overflow:hidden;min-height:0}
-.box video{width:100%;height:100%;background:#000}
-#remote{object-fit:contain}
-#local{object-fit:contain;transform:scaleX(-1)} /* mirrored selfie preview */
-.tag{position:absolute;left:10px;top:10px;background:#0009;padding:4px 10px;border-radius:20px;font-size:.8rem}
-#status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);background:#000a;text-align:center;padding:20px}
-#chat{width:340px;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel)}
-#log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
-.m{max-width:85%;padding:8px 12px;border-radius:14px;word-wrap:break-word;font-size:.95rem}
-.m.me{align-self:flex-end;background:var(--acc)} .m.them{align-self:flex-start;background:var(--line)}
-.sys{align-self:center;color:var(--mut);font-size:.85rem}
-#typing{height:18px;padding:0 12px;color:var(--mut);font-size:.8rem}
-#bar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
-#msg{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px;font:inherit}
-#ctrl{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)} #ctrl button{flex:1}
-body.textonly #videos{display:none} body.textonly #chat{width:100%;border:0}
-@media(max-width:800px){main{flex-direction:column} #chat{width:100%;height:42%;border-left:0;border-top:1px solid var(--line)}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrangerChat - Talk to Strangers!</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    header { background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+    .logo { font-size: 1.4rem; font-weight: 700; color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .status-badge { background: #10b981; color: #000; font-size: 0.75rem; padding: 4px 8px; borderRadius: 12px; font-weight: 600; }
+    
+    .main-container { flex: 1; display: flex; flex-direction: row; height: calc(100vh - 60px); }
+    @media (max-width: 768px) { .main-container { flex-direction: column; } }
+
+    /* Video Panel */
+    .video-section { flex: 2; background: #000; display: flex; flex-direction: column; position: relative; }
+    .video-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #020617; position: relative; }
+    @media (max-width: 768px) { .video-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
+    
+    .video-box { position: relative; background: #1e293b; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+    video.mirrored { transform: scaleX(-1); }
+    .video-label { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; backdrop-filter: blur(4px); }
+
+    .video-controls { padding: 10px; background: #1e293b; display: flex; gap: 10px; justify-content: center; align-items: center; border-top: 1px solid #334155; }
+    .btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px 18px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-secondary { background: #475569; color: #fff; }
+
+    /* Chat Panel */
+    .chat-section { flex: 1; min-width: 300px; background: #0f172a; display: flex; flex-direction: column; border-left: 1px solid #334155; }
+    .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
+    .msg.system { background: #334155; color: #94a3b8; align-self: center; font-size: 0.85rem; text-align: center; width: 100%; }
+    .msg.you { background: #0284c7; color: #fff; align-self: flex-end; }
+    .msg.stranger { background: #334155; color: #f8fafc; align-self: flex-start; }
+
+    .chat-input-box { padding: 12px; background: #1e293b; border-top: 1px solid #334155; display: flex; gap: 8px; }
+    .chat-input-box input { flex: 1; background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 6px; color: #fff; outline: none; }
+    .chat-input-box input:focus { border-color: #38bdf8; }
+
+    /* Turn Config Bar */
+    .turn-bar { background: #1e293b; padding: 6px 12px; font-size: 0.8rem; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #334155; }
+    .turn-bar input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+  </style>
 </head>
 <body>
-<div id="home">
-  <h1>Stranger<span style="color:var(--acc)">Chat</span></h1>
-  <p>Meet new people instantly. Chat by text or video with a random stranger. Be kind and stay safe — never share personal info.</p>
-  <div class="row">
-    <button onclick="start('text')">💬 Text Chat</button>
-    <button onclick="start('video')">🎥 Video Chat</button>
+
+  <header>
+    <a href="#" class="logo">⚡ StrangerChat</a>
+    <span class="status-badge" id="statusBadge">Ready</span>
+  </header>
+
+  <!-- Optional TURN Server Credential Inputs for 4G/5G Connectivity -->
+  <div class="turn-bar">
+    <span>Metered TURN Username:</span>
+    <input type="text" id="turnUser" placeholder="Paste Metered Username">
+    <span>Credential:</span>
+    <input type="password" id="turnCred" placeholder="Paste Metered Password">
+    <button class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="updateTurnConfig()">Save TURN</button>
   </div>
-  <p style="font-size:.8rem">By continuing you confirm you are 18+ and agree to chat respectfully. <span id="cnt"></span></p>
-</div>
 
-<div id="app">
-  <header><span>StrangerChat</span><small id="online"></small></header>
-  <main>
-    <section id="videos">
-      <div class="box"><video id="remote" autoplay playsinline></video><span class="tag">Stranger</span><div id="status">Connecting…</div></div>
-      <div class="box"><video id="local" autoplay playsinline muted></video><span class="tag">You</span></div>
-    </section>
-    <aside id="chat">
-      <div id="log"></div><div id="typing"></div>
-      <div id="bar"><input id="msg" placeholder="Type a message…" autocomplete="off" maxlength="1000"><button id="send">Send</button></div>
-      <div id="ctrl"><button class="sec" id="next">Next</button><button class="sec" id="rep">Report</button><button class="red" id="stop">Stop</button></div>
-    </aside>
-  </main>
-</div>
+  <div class="main-container">
+    <!-- Video Stream Section -->
+    <div class="video-section">
+      <div class="video-grid">
+        <div class="video-box">
+          <video id="remoteVideo" autoplay playsinline></video>
+          <div class="video-label">Stranger</div>
+        </div>
+        <div class="video-box">
+          <video id="localVideo" class="mirrored" autoplay playsinline muted></video>
+          <div class="video-label">You</div>
+        </div>
+      </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-const $=id=>document.getElementById(id);
-const socket=io();
-let mode="text", localStream=null, pc=null, matched=false, typingTimer;
-const ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
+      <div class="video-controls">
+        <button class="btn btn-danger" id="nextBtn" onclick="nextPartner()">Next (Esc)</button>
+        <button class="btn btn-secondary" id="muteAudioBtn" onclick="toggleMuteAudio()">Mute</button>
+        <button class="btn btn-secondary" id="muteVideoBtn" onclick="toggleMuteVideo()">Stop Video</button>
+      </div>
+    </div>
 
-socket.on("online",n=>{$("online").textContent=n+" online";$("cnt").textContent=n+" online"});
+    <!-- Text Chat Section -->
+    <div class="chat-section">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg system">Welcome to StrangerChat! Click "Next" or start chatting.</div>
+      </div>
 
-async function start(m){
-  mode=m;
-  document.body.classList.toggle("textonly",m==="text");
-  if(m==="video"){
-    try{
-      localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-      $("local").srcObject=localStream;
-    }catch(e){alert("Camera/microphone permission is required for video chat.");return;}
-  }
-  $("home").style.display="none";$("app").style.display="flex";
-  findNext();
-}
-function sys(t){const d=document.createElement("div");d.className="m sys";d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9}
-function add(t,me){const d=document.createElement("div");d.className="m "+(me?"me":"them");d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9}
-function closePC(){if(pc){pc.ontrack=pc.onicecandidate=null;pc.close();pc=null}$("remote").srcObject=null}
-function findNext(){
-  closePC();matched=false;$("log").innerHTML="";$("typing").textContent="";
-  $("status").style.display="flex";$("status").textContent="Looking for someone…";
-  sys("Looking for someone to chat with…");
-  socket.emit("find",mode);
-}
-function makePC(initiator){
-  pc=new RTCPeerConnection(ICE);
-  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-  pc.onicecandidate=e=>{if(e.candidate)socket.emit("signal",{candidate:e.candidate})};
-  pc.ontrack=e=>{
-    const r=$("remote");r.srcObject=e.streams[0];
-    r.style.objectFit="contain"; // keep stranger's full frame visible
-    $("status").style.display="none";
-  };
-  pc.onconnectionstatechange=()=>{if(pc&&pc.connectionState==="failed")$("status").textContent="Connection failed. Press Next."};
-  if(initiator)pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>socket.emit("signal",{sdp:pc.localDescription}));
-}
-socket.on("waiting",()=>{});
-socket.on("matched",({initiator})=>{
-  matched=true;$("log").innerHTML="";sys("Stranger connected. Say hi! 👋");
-  if(mode==="video"){$("status").textContent="Connecting video…";makePC(initiator)}
-  else $("status").style.display="none";
-});
-socket.on("signal",async d=>{
-  if(!pc)return;
-  try{
-    if(d.sdp){
-      await pc.setRemoteDescription(d.sdp);
-      if(d.sdp.type==="offer"){const a=await pc.createAnswer();await pc.setLocalDescription(a);socket.emit("signal",{sdp:pc.localDescription})}
-    }else if(d.candidate)await pc.addIceCandidate(d.candidate);
-  }catch(e){console.error(e)}
-});
-socket.on("partner-left",()=>{sys("Stranger disconnected. Finding a new one…");findNext()});
-socket.on("message",t=>{add(t,false);$("typing").textContent=""});
-socket.on("typing",v=>{$("typing").textContent=v?"Stranger is typing…":""});
+      <div class="chat-input-box">
+        <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+        <button class="btn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
 
-function send(){const t=$("msg").value.trim();if(!t||!matched)return;socket.emit("message",t);add(t,true);$("msg").value="";socket.emit("typing",false)}
-$("send").onclick=send;
-$("msg").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
-$("msg").addEventListener("input",()=>{if(!matched)return;socket.emit("typing",true);clearTimeout(typingTimer);typingTimer=setTimeout(()=>socket.emit("typing",false),1500)});
-$("next").onclick=()=>{socket.emit("leave");findNext()};
-$("rep").onclick=()=>{if(matched){socket.emit("report");sys("Report sent. Thank you.")}};
-$("stop").onclick=()=>{socket.emit("leave");closePC();if(localStream)localStream.getTracks().forEach(t=>t.stop());location.reload()};
-</script>
+  <script>
+    const socket = io();
+
+    let localStream = null;
+    let peerConnection = null;
+    let partnerId = null;
+
+    // Default ICE Configuration including standard STUN & Metered TURN fallback
+    let iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun.metered.ca:80' }
+    ];
+
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const statusBadge = document.getElementById('statusBadge');
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+
+    // Allow adding Metered TURN credentials directly in UI
+    function updateTurnConfig() {
+      const u = document.getElementById('turnUser').value.trim();
+      const c = document.getElementById('turnCred').value.trim();
+
+      if (u && c) {
+        iceServers.push({
+          urls: [
+            "turn:global.relay.metered.ca:80",
+            "turn:global.relay.metered.ca:443",
+            "turn:global.relay.metered.ca:443?transport=tcp"
+          ],
+          username: u,
+          credential: c
+        });
+        appendSystemMessage("TURN server credentials saved! 4G/5G connections active.");
+      }
+    }
+
+    // Initialize Camera
+    async function initCamera() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+      } catch (err) {
+        console.error("Camera access error:", err);
+        appendSystemMessage("Error accessing camera/microphone. Please allow permissions.");
+      }
+    }
+
+    initCamera();
+
+    // Start matching process
+    function nextPartner() {
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      remoteVideo.srcObject = null;
+      partnerId = null;
+
+      statusBadge.textContent = "Searching...";
+      statusBadge.style.background = "#f59e0b";
+      appendSystemMessage("Searching for a stranger...");
+
+      socket.emit('find_partner');
+    }
+
+    // Handle WebSocket Signaling
+    socket.on('waiting_for_partner', () => {
+      statusBadge.textContent = "Waiting...";
+      statusBadge.style.background = "#f59e0b";
+    });
+
+    socket.on('match_found', async (data) => {
+      partnerId = data.partnerId;
+      statusBadge.textContent = "Connected";
+      statusBadge.style.background = "#10b981";
+      appendSystemMessage("Connected to a stranger! Say hi.");
+
+      createPeerConnection(data.initiator);
+    });
+
+    socket.on('partner_left', () => {
+      statusBadge.textContent = "Disconnected";
+      statusBadge.style.background = "#ef4444";
+      appendSystemMessage("Stranger has disconnected.");
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      remoteVideo.srcObject = null;
+    });
+
+    socket.on('signal', async (data) => {
+      if (!peerConnection) createPeerConnection(false);
+
+      if (data.signal.sdp) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal.sdp));
+        if (data.signal.sdp.type === 'offer') {
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          socket.emit('signal', { target: partnerId, signal: { sdp: peerConnection.localDescription } });
+        }
+      } else if (data.signal.candidate) {
+        try {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal.candidate));
+        } catch (e) {
+          console.error("Error adding candidate", e);
+        }
+      }
+    });
+
+    // Setup RTCPeerConnection with WebRTC event handlers
+    function createPeerConnection(isInitiator) {
+      peerConnection = new RTCPeerConnection({ iceServers });
+
+      // Add local tracks to WebRTC
+      if (localStream) {
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+      }
+
+      // Handle incoming remote track (Stranger video/audio)
+      peerConnection.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+          remoteVideo.srcObject = event.streams[0];
+          // Force play on iOS/Android WebKit
+          remoteVideo.play().catch(e => console.log("Auto-play blocked or waiting on user touch", e));
+        }
+      };
+
+      // Send ICE candidates to partner
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('signal', { target: partnerId, signal: { candidate: event.candidate } });
+        }
+      };
+
+      // Initiator creates WebRTC Offer
+      if (isInitiator) {
+        peerConnection.onnegotiationneeded = async () => {
+          try {
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit('signal', { target: partnerId, signal: { sdp: peerConnection.localDescription } });
+          } catch (err) {
+            console.error("Offer creation error:", err);
+          }
+        };
+      }
+    }
+
+    // Chat Message Handlers
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || !partnerId) return;
+
+      socket.emit('send_message', { text });
+      appendChatMessage(text, 'you');
+      messageInput.value = '';
+    }
+
+    socket.on('receive_message', (data) => {
+      appendChatMessage(data.text, 'stranger');
+    });
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') sendMessage();
+    }
+
+    function appendChatMessage(text, sender) {
+      const div = document.createElement('div');
+      div.className = `msg ${sender}`;
+      div.textContent = text;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function appendSystemMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'msg system';
+      div.textContent = text;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Mute controls
+    function toggleMuteAudio() {
+      if (!localStream) return;
+      const track = localStream.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        document.getElementById('muteAudioBtn').textContent = track.enabled ? 'Mute' : 'Unmute';
+      }
+    }
+
+    function toggleMuteVideo() {
+      if (!localStream) return;
+      const track = localStream.getVideoTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        document.getElementById('muteVideoBtn').textContent = track.enabled ? 'Stop Video' : 'Start Video';
+      }
+    }
+
+    // Keyboard shortcut (Escape to skip)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') nextPartner();
+    });
+  </script>
 </body>
 </html>
