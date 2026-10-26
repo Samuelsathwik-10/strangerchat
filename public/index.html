@@ -2,96 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>StrangerChat - Talk to Strangers!</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    header { background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-    .logo { font-size: 1.4rem; font-weight: 700; color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px; }
-    .status-badge { background: #10b981; color: #000; font-size: 0.75rem; padding: 4px 8px; borderRadius: 12px; font-weight: 600; }
-    
-    .main-container { flex: 1; display: flex; flex-direction: row; height: calc(100vh - 60px); }
-    @media (max-width: 768px) { .main-container { flex-direction: column; } }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #0b0f19; color: #f1f5f9; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* Video Panel */
-    .video-section { flex: 2; background: #000; display: flex; flex-direction: column; position: relative; }
-    .video-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #020617; position: relative; }
+    /* Header */
+    header { background: #111827; height: 56px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.25rem; color: #38bdf8; }
+    .status-pill { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+
+    /* TURN Server Configuration Bar */
+    .turn-bar { background: #1e293b; padding: 8px 16px; font-size: 0.8rem; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; }
+    .turn-bar span { color: #94a3b8; font-weight: 500; }
+    .turn-bar input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; outline: none; }
+    .turn-bar input:focus { border-color: #38bdf8; }
+    .btn-save-turn { background: #38bdf8; color: #0f172a; border: none; padding: 4px 12px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+
+    /* Main Container */
+    .app-body { flex: 1; display: flex; flex-direction: row; height: calc(100vh - 96px); overflow: hidden; }
+    @media (max-width: 768px) { .app-body { flex-direction: column; } }
+
+    /* Video Workspace */
+    .video-workspace { flex: 2; background: #030712; display: flex; flex-direction: column; position: relative; }
+    .video-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; background: #030712; height: 100%; }
     @media (max-width: 768px) { .video-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
-    
-    .video-box { position: relative; background: #1e293b; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+    .video-card { position: relative; background: #111827; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #1f2937; }
     video { width: 100%; height: 100%; object-fit: cover; background: #000; }
     video.mirrored { transform: scaleX(-1); }
-    .video-label { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; backdrop-filter: blur(4px); }
+    
+    .badge { position: absolute; top: 12px; left: 12px; background: rgba(0, 0, 0, 0.65); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); z-index: 2; }
 
-    .video-controls { padding: 10px; background: #1e293b; display: flex; gap: 10px; justify-content: center; align-items: center; border-top: 1px solid #334155; }
-    .btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px 18px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    /* Controls Bar */
+    .controls-bar { background: #111827; padding: 12px 16px; display: flex; justify-content: center; align-items: center; gap: 12px; border-top: 1px solid #1f2937; }
+    .btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem; }
     .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-danger { background: #ef4444; color: #fff; }
-    .btn-secondary { background: #475569; color: #fff; }
+    .btn-next { background: #ec4899; color: #ffffff; padding: 10px 28px; font-size: 1.05rem; }
+    .btn-secondary { background: #374151; color: #f3f4f6; }
+    .btn-secondary:hover { background: #4b5563; }
 
-    /* Chat Panel */
-    .chat-section { flex: 1; min-width: 300px; background: #0f172a; display: flex; flex-direction: column; border-left: 1px solid #334155; }
-    .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
-    .msg.system { background: #334155; color: #94a3b8; align-self: center; font-size: 0.85rem; text-align: center; width: 100%; }
-    .msg.you { background: #0284c7; color: #fff; align-self: flex-end; }
-    .msg.stranger { background: #334155; color: #f8fafc; align-self: flex-start; }
+    /* Chat Workspace */
+    .chat-workspace { flex: 1; min-width: 320px; background: #0d1322; display: flex; flex-direction: column; border-left: 1px solid #1f2937; }
+    .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
+    .msg.system { background: rgba(55, 65, 81, 0.5); color: #9ca3af; align-self: center; font-size: 0.8rem; text-align: center; width: 100%; border-radius: 8px; border: 1px dashed #374151; }
+    .msg.you { background: #0284c7; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg.stranger { background: #1f2937; color: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 2px; }
 
-    .chat-input-box { padding: 12px; background: #1e293b; border-top: 1px solid #334155; display: flex; gap: 8px; }
-    .chat-input-box input { flex: 1; background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 6px; color: #fff; outline: none; }
-    .chat-input-box input:focus { border-color: #38bdf8; }
+    .chat-input-bar { padding: 12px; background: #111827; border-top: 1px solid #1f2937; display: flex; gap: 8px; }
+    .chat-input-bar input { flex: 1; background: #030712; border: 1px solid #1f2937; padding: 10px 14px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem; }
+    .chat-input-bar input:focus { border-color: #38bdf8; }
 
-    /* Turn Config Bar */
-    .turn-bar { background: #1e293b; padding: 6px 12px; font-size: 0.8rem; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #334155; }
-    .turn-bar input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+    /* Overlay Rules Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+    .modal-card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 28px; max-width: 440px; width: 100%; text-align: center; }
+    .modal-card h2 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 12px; }
+    .modal-card p { font-size: 0.9rem; color: #9ca3af; margin-bottom: 20px; line-height: 1.5; }
   </style>
 </head>
 <body>
 
-  <header>
-    <a href="#" class="logo">⚡ StrangerChat</a>
-    <span class="status-badge" id="statusBadge">Ready</span>
-  </header>
-
-  <!-- Optional TURN Server Credential Inputs for 4G/5G Connectivity -->
-  <div class="turn-bar">
-    <span>Metered TURN Username:</span>
-    <input type="text" id="turnUser" placeholder="Paste Metered Username">
-    <span>Credential:</span>
-    <input type="password" id="turnCred" placeholder="Paste Metered Password">
-    <button class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="updateTurnConfig()">Save TURN</button>
+  <!-- Age Gate / Safety Rules Modal -->
+  <div class="modal-overlay" id="ageModal">
+    <div class="modal-card">
+      <h2>Welcome to StrangerChat ⚡</h2>
+      <p>You must be <strong>18 years or older</strong> to use StrangerChat. Please respect other users and avoid inappropriate behavior.</p>
+      <button class="btn btn-next" style="width:100%; justify-content:center;" onclick="acceptRules()">I am 18+ & Agree</button>
+    </div>
   </div>
 
-  <div class="main-container">
+  <header>
+    <a href="#" class="brand">⚡ StrangerChat</a>
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Ready</span>
+    </div>
+  </header>
+
+  <!-- Metered TURN Credential Bar -->
+  <div class="turn-bar">
+    <span>4G/5G Relay (Metered TURN):</span>
+    <input type="text" id="turnUser" placeholder="Username">
+    <input type="password" id="turnCred" placeholder="Credential">
+    <button class="btn-save-turn" onclick="saveTurnCredentials()">Save TURN</button>
+  </div>
+
+  <div class="app-body">
     <!-- Video Stream Section -->
-    <div class="video-section">
+    <div class="video-workspace">
       <div class="video-grid">
-        <div class="video-box">
+        <div class="video-card">
+          <div class="badge">Stranger</div>
           <video id="remoteVideo" autoplay playsinline></video>
-          <div class="video-label">Stranger</div>
         </div>
-        <div class="video-box">
+        <div class="video-card">
+          <div class="badge">You</div>
           <video id="localVideo" class="mirrored" autoplay playsinline muted></video>
-          <div class="video-label">You</div>
         </div>
       </div>
 
-      <div class="video-controls">
-        <button class="btn btn-danger" id="nextBtn" onclick="nextPartner()">Next (Esc)</button>
+      <div class="controls-bar">
+        <button class="btn btn-next" id="nextBtn" onclick="nextPartner()">NEXT (Esc)</button>
         <button class="btn btn-secondary" id="muteAudioBtn" onclick="toggleMuteAudio()">Mute</button>
         <button class="btn btn-secondary" id="muteVideoBtn" onclick="toggleMuteVideo()">Stop Video</button>
       </div>
     </div>
 
     <!-- Text Chat Section -->
-    <div class="chat-section">
+    <div class="chat-workspace">
       <div class="chat-messages" id="chatMessages">
-        <div class="msg system">Welcome to StrangerChat! Click "Next" or start chatting.</div>
+        <div class="msg system">Welcome! Click "NEXT" to connect with a stranger.</div>
       </div>
 
-      <div class="chat-input-box">
+      <div class="chat-input-bar">
         <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
         <button class="btn" onclick="sendMessage()">Send</button>
       </div>
@@ -105,29 +133,27 @@
     let peerConnection = null;
     let partnerId = null;
 
-    // Default ICE Configuration including standard STUN & Metered TURN fallback
-   let iceServers = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { 
-    urls: [
-      "turn:global.relay.metered.ca:80",
-      "turn:global.relay.metered.ca:443",
-      "turn:global.relay.metered.ca:443?transport=tcp"
-    ],
-    username: "YOUR_ACTUAL_USERNAME",
-    credential: "YOUR_ACTUAL_PASSWORD"
-  }
-];
+    // WebRTC ICE Servers with fallback Google STUN & Metered TURN
+    let iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun.metered.ca:80' }
+    ];
 
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
-    const statusBadge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.getElementById('statusDot');
     const chatMessages = document.getElementById('chatMessages');
     const messageInput = document.getElementById('messageInput');
 
-    // Allow adding Metered TURN credentials directly in UI
-    function updateTurnConfig() {
+    function acceptRules() {
+      document.getElementById('ageModal').style.display = 'none';
+      initCamera();
+    }
+
+    function saveTurnCredentials() {
       const u = document.getElementById('turnUser').value.trim();
       const c = document.getElementById('turnCred').value.trim();
 
@@ -141,24 +167,23 @@
           username: u,
           credential: c
         });
-        appendSystemMessage("TURN server credentials saved! 4G/5G connections active.");
+        appendSystemMessage("TURN server credentials saved successfully!");
       }
     }
 
-    // Initialize Camera
     async function initCamera() {
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, 
+          audio: true 
+        });
         localVideo.srcObject = localStream;
       } catch (err) {
-        console.error("Camera access error:", err);
-        appendSystemMessage("Error accessing camera/microphone. Please allow permissions.");
+        console.error("Camera access denied or error:", err);
+        appendSystemMessage("Please allow camera and microphone access to start.");
       }
     }
 
-    initCamera();
-
-    // Start matching process
     function nextPartner() {
       if (peerConnection) {
         peerConnection.close();
@@ -167,31 +192,26 @@
       remoteVideo.srcObject = null;
       partnerId = null;
 
-      statusBadge.textContent = "Searching...";
-      statusBadge.style.background = "#f59e0b";
+      updateStatus("Searching...", "#f59e0b");
       appendSystemMessage("Searching for a stranger...");
 
       socket.emit('find_partner');
     }
 
-    // Handle WebSocket Signaling
     socket.on('waiting_for_partner', () => {
-      statusBadge.textContent = "Waiting...";
-      statusBadge.style.background = "#f59e0b";
+      updateStatus("Waiting...", "#f59e0b");
     });
 
-    socket.on('match_found', async (data) => {
+    socket.on('match_found', (data) => {
       partnerId = data.partnerId;
-      statusBadge.textContent = "Connected";
-      statusBadge.style.background = "#10b981";
-      appendSystemMessage("Connected to a stranger! Say hi.");
+      updateStatus("Connected", "#10b981");
+      appendSystemMessage("You are now chatting with a random stranger!");
 
       createPeerConnection(data.initiator);
     });
 
     socket.on('partner_left', () => {
-      statusBadge.textContent = "Disconnected";
-      statusBadge.style.background = "#ef4444";
+      updateStatus("Disconnected", "#ef4444");
       appendSystemMessage("Stranger has disconnected.");
       if (peerConnection) {
         peerConnection.close();
@@ -214,37 +234,31 @@
         try {
           await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal.candidate));
         } catch (e) {
-          console.error("Error adding candidate", e);
+          console.error("Error adding candidate:", e);
         }
       }
     });
 
-    // Setup RTCPeerConnection with WebRTC event handlers
     function createPeerConnection(isInitiator) {
       peerConnection = new RTCPeerConnection({ iceServers });
 
-      // Add local tracks to WebRTC
       if (localStream) {
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
       }
 
-      // Handle incoming remote track (Stranger video/audio)
       peerConnection.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           remoteVideo.srcObject = event.streams[0];
-          // Force play on iOS/Android WebKit
-          remoteVideo.play().catch(e => console.log("Auto-play blocked or waiting on user touch", e));
+          remoteVideo.play().catch(e => console.log("Autoplay caught:", e));
         }
       };
 
-      // Send ICE candidates to partner
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('signal', { target: partnerId, signal: { candidate: event.candidate } });
         }
       };
 
-      // Initiator creates WebRTC Offer
       if (isInitiator) {
         peerConnection.onnegotiationneeded = async () => {
           try {
@@ -258,7 +272,6 @@
       }
     }
 
-    // Chat Message Handlers
     function sendMessage() {
       const text = messageInput.value.trim();
       if (!text || !partnerId) return;
@@ -292,7 +305,11 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Mute controls
+    function updateStatus(text, color) {
+      statusText.textContent = text;
+      statusDot.style.background = color;
+    }
+
     function toggleMuteAudio() {
       if (!localStream) return;
       const track = localStream.getAudioTracks()[0];
@@ -311,7 +328,6 @@
       }
     }
 
-    // Keyboard shortcut (Escape to skip)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') nextPartner();
     });
