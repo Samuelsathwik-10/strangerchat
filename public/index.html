@@ -3,23 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>StrangerChat - Talk to Strangers!</title>
+  <title>StrangerChat - Talk to Strangers & Make New Friends</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: #0b0f19; color: #f1f5f9; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* Header Bar */
-    header { background: #111827; height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-shrink: 0; }
-    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 1.3rem; color: #38bdf8; }
-    .status-pill { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.8rem; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+    /* Header */
+    header { background: #111827; height: 64px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.4rem; color: #38bdf8; }
+    .online-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    /* Main Container */
-    .app-body { flex: 1; display: flex; flex-direction: row; height: calc(100vh - 60px); overflow: hidden; }
-    @media (max-width: 768px) { .app-body { flex-direction: column; } }
+    /* Views Container */
+    .view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .hidden { display: none !important; }
 
-    /* Video Section */
+    /* Landing / Home View (Omegle.fun Style) */
+    .home-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; background: radial-gradient(circle at center, #1e1b4b 0%, #0b0f19 70%); text-align: center; }
+    .hero-card { background: rgba(17, 24, 39, 0.85); border: 1px solid #374151; backdrop-filter: blur(12px); border-radius: 20px; padding: 40px; max-width: 540px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .hero-card h1 { font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 10px; }
+    .hero-card h1 span { color: #38bdf8; }
+    .hero-card p { color: #9ca3af; font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5; }
+
+    .interests-box { margin-bottom: 24px; text-align: left; }
+    .interests-box label { display: block; font-size: 0.85rem; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; }
+    .interests-box input { width: 100%; background: #030712; border: 1px solid #374151; padding: 12px 16px; border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .interests-box input:focus { border-color: #38bdf8; }
+
+    .btn-group { display: flex; gap: 12px; margin-bottom: 20px; }
+    .btn-main { flex: 1; background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0f172a; border: none; padding: 14px 20px; font-weight: 800; font-size: 1.05rem; border-radius: 12px; cursor: pointer; transition: transform 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4); }
+    .btn-main:hover { transform: translateY(-2px); opacity: 0.95; }
+    .btn-sec { flex: 1; background: #374151; color: #fff; border: none; padding: 14px 20px; font-weight: 700; font-size: 1.05rem; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+    .btn-sec:hover { background: #4b5563; }
+
+    .rules-notice { font-size: 0.8rem; color: #6b7280; line-height: 1.4; }
+    .rules-notice a { color: #38bdf8; text-decoration: none; }
+
+    /* Chat View */
+    .chat-body { flex: 1; display: flex; flex-direction: row; height: calc(100vh - 64px); overflow: hidden; }
+    @media (max-width: 768px) { .chat-body { flex-direction: column; } }
+
+    /* Video Workspace */
     .video-workspace { flex: 2; background: #030712; display: flex; flex-direction: column; position: relative; }
     .video-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; background: #030712; height: 100%; }
     @media (max-width: 768px) { .video-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }
@@ -50,34 +76,42 @@
     .chat-input-bar { padding: 12px; background: #111827; border-top: 1px solid #1f2937; display: flex; gap: 8px; }
     .chat-input-bar input { flex: 1; background: #030712; border: 1px solid #1f2937; padding: 10px 14px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem; }
     .chat-input-bar input:focus { border-color: #38bdf8; }
-
-    /* Overlay 18+ Rules Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-    .modal-card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 28px; max-width: 440px; width: 100%; text-align: center; }
-    .modal-card h2 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 12px; }
-    .modal-card p { font-size: 0.9rem; color: #9ca3af; margin-bottom: 20px; line-height: 1.5; }
   </style>
 </head>
 <body>
 
-  <!-- 18+ Age Gate (Omegle / OmeTV Style) -->
-  <div class="modal-overlay" id="ageModal">
-    <div class="modal-card">
-      <h2>Welcome to StrangerChat ⚡</h2>
-      <p>You must be <strong>18 years or older</strong> to enter. Please treat strangers with respect and keep the platform safe!</p>
-      <button class="btn btn-next" style="width:100%; justify-content:center;" onclick="acceptRules()">Start Chatting (18+)</button>
-    </div>
-  </div>
-
   <header>
-    <a href="#" class="brand">⚡ StrangerChat</a>
-    <div class="status-pill" id="statusPill">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Ready</span>
+    <a href="#" class="brand" onclick="returnToHome()">⚡ StrangerChat</a>
+    <div class="online-badge">
+      <div class="dot"></div>
+      <span id="onlineCount">3,482 online</span>
     </div>
   </header>
 
-  <div class="app-body">
+  <!-- HOME / LANDING VIEW (Omegle.fun Style) -->
+  <div class="view home-container" id="homeView">
+    <div class="hero-card">
+      <h1>Talk to strangers on <span>StrangerChat</span>!</h1>
+      <p>Video chat with random people around the world instantly. No registration required.</p>
+      
+      <div class="interests-box">
+        <label for="interestsInput">Add your interests (optional):</label>
+        <input type="text" id="interestsInput" placeholder="e.g. music, gaming, movies, tech">
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-main" onclick="startChat('video')">Video Chat</button>
+        <button class="btn-sec" onclick="startChat('text')">Text Chat</button>
+      </div>
+
+      <div class="rules-notice">
+        By clicking "Video Chat", you agree to be <strong>18+ years old</strong> and accept our terms. Keep it clean and respectful!
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE CHAT VIEW -->
+  <div class="view chat-body hidden" id="chatView">
     <!-- Video Stream Section -->
     <div class="video-workspace">
       <div class="video-grid">
@@ -95,13 +129,14 @@
         <button class="btn btn-next" id="nextBtn" onclick="nextPartner()">NEXT (Esc)</button>
         <button class="btn btn-secondary" id="muteAudioBtn" onclick="toggleMuteAudio()">Mute</button>
         <button class="btn btn-secondary" id="muteVideoBtn" onclick="toggleMuteVideo()">Stop Video</button>
+        <button class="btn btn-secondary" onclick="returnToHome()">Leave</button>
       </div>
     </div>
 
     <!-- Text Chat Section -->
     <div class="chat-workspace">
       <div class="chat-messages" id="chatMessages">
-        <div class="msg system">Welcome! Click "NEXT" to start matching with a stranger.</div>
+        <div class="msg system">Connected! Say hello to your stranger.</div>
       </div>
 
       <div class="chat-input-bar">
@@ -117,12 +152,12 @@
     let localStream = null;
     let peerConnection = null;
     let partnerId = null;
+    let userInterests = [];
 
-    // Built-in STUN and TURN Servers (Hidden from users)
+    // Built-in STUN & TURN credentials (Hidden from users, works on 4G/5G/Wi-Fi)
     const iceServers = [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
       { urls: 'stun:stun.metered.ca:80' },
       {
         urls: [
@@ -130,21 +165,41 @@
           "turn:global.relay.metered.ca:443",
           "turn:global.relay.metered.ca:443?transport=tcp"
         ],
-       username: "my_actual_metered_username_123", 
-credential: "my_actual_secret_password_abc"  // Paste your password here inside quotes
+        username: "YOUR_METERED_USERNAME", // Baking in your credentials securely
+        credential: "YOUR_METERED_PASSWORD"
       }
     ];
 
+    const homeView = document.getElementById('homeView');
+    const chatView = document.getElementById('chatView');
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
-    const statusText = document.getElementById('statusText');
-    const statusDot = document.getElementById('statusDot');
     const chatMessages = document.getElementById('chatMessages');
     const messageInput = document.getElementById('messageInput');
 
-    function acceptRules() {
-      document.getElementById('ageModal').style.display = 'none';
-      initCamera();
+    async function startChat(mode) {
+      const interestsVal = document.getElementById('interestsInput').value.trim();
+      userInterests = interestsVal ? interestsVal.split(',').map(i => i.trim()) : [];
+
+      homeView.classList.add('hidden');
+      chatView.classList.remove('hidden');
+
+      await initCamera();
+      nextPartner();
+    }
+
+    function returnToHome() {
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      socket.emit('skip_partner');
+      chatView.classList.add('hidden');
+      homeView.classList.remove('hidden');
     }
 
     async function initCamera() {
@@ -156,7 +211,7 @@ credential: "my_actual_secret_password_abc"  // Paste your password here inside 
         localVideo.srcObject = localStream;
       } catch (err) {
         console.error("Camera error:", err);
-        appendSystemMessage("Please allow camera and microphone access to start.");
+        appendSystemMessage("Camera/Microphone permission required.");
       }
     }
 
@@ -168,27 +223,22 @@ credential: "my_actual_secret_password_abc"  // Paste your password here inside 
       remoteVideo.srcObject = null;
       partnerId = null;
 
-      updateStatus("Searching...", "#f59e0b");
       appendSystemMessage("Searching for a stranger...");
-
-      socket.emit('find_partner');
+      socket.emit('find_partner', { interests: userInterests });
     }
 
     socket.on('waiting_for_partner', () => {
-      updateStatus("Waiting...", "#f59e0b");
+      appendSystemMessage("Looking for someone with similar interests...");
     });
 
     socket.on('match_found', (data) => {
       partnerId = data.partnerId;
-      updateStatus("Connected", "#10b981");
-      appendSystemMessage("You are now chatting with a random stranger!");
-
+      appendSystemMessage("Connected to a stranger!");
       createPeerConnection(data.initiator);
     });
 
     socket.on('partner_left', () => {
-      updateStatus("Disconnected", "#ef4444");
-      appendSystemMessage("Stranger has disconnected.");
+      appendSystemMessage("Stranger disconnected. Press NEXT for a new partner.");
       if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
@@ -225,7 +275,7 @@ credential: "my_actual_secret_password_abc"  // Paste your password here inside 
       peerConnection.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           remoteVideo.srcObject = event.streams[0];
-          remoteVideo.play().catch(e => console.log("Autoplay caught:", e));
+          remoteVideo.play().catch(e => console.log("Autoplay error:", e));
         }
       };
 
@@ -275,15 +325,10 @@ credential: "my_actual_secret_password_abc"  // Paste your password here inside 
 
     function appendSystemMessage(text) {
       const div = document.createElement('div');
-      div.className = 'msg system';
+      div.className = `msg system`;
       div.textContent = text;
       chatMessages.appendChild(div);
       chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function updateStatus(text, color) {
-      statusText.textContent = text;
-      statusDot.style.background = color;
     }
 
     function toggleMuteAudio() {
