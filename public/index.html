@@ -128,7 +128,14 @@ function status(t){$('status').textContent='● '+t}function toast(t){$('toast')
 function msg(t,type='system'){const e=document.createElement('div');e.className='message '+type;e.textContent=t;$('messages').appendChild(e);$('messages').scrollTop=$('messages').scrollHeight}
 function resetRemote(){remoteVideo.srcObject=null;$('remotePlaceholder').style.display='flex'}function stopMedia(){if(localStream)localStream.getTracks().forEach(t=>t.stop());localStream=null;localVideo.srcObject=null;$('localPlaceholder').style.display='flex'}
 function closePeer(){if(pc){pc.close()}pc=null;pending=[];resetRemote()}
-async function media(){if(localStream&&localStream.getTracks().some(t=>t.readyState==='live'))return;if(!navigator.mediaDevices?.getUserMedia)throw Error('Camera needs HTTPS or localhost in a modern browser.');localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});localVideo.srcObject=localStream;$('localPlaceholder').style.display='none'}
+async function media(){if(localStream&&localStream.getTracks().some(t=>t.readyState==='live'))return;if(!navigator.mediaDevices?.getUserMedia)throw Error('Camera needs HTTPS or localhost in a modern browser.');localStream = await navigator.mediaDevices.getUserMedia({
+  video: {
+    width: { ideal: 640 },
+    height: { ideal: 480 },
+    frameRate: { ideal: 24, max: 30 }
+  },
+  audio: true
+});localVideo.srcObject=localStream;$('localPlaceholder').style.display='none'}
 function makePC(){if(pc&&pc.signalingState!=='closed')return pc;pc=new RTCPeerConnection(rtc);const p=pc;if(localStream)localStream.getTracks().forEach(t=>p.addTrack(t,localStream));p.onicecandidate=e=>{if(e.candidate&&partnerId&&mode==='video')socket.emit('video-signal',{type:'ice-candidate',payload:e.candidate})};p.ontrack=e=>{if(e.streams?.[0]){remoteVideo.srcObject=e.streams[0];remoteVideo.style.setProperty('object-fit','contain','important');remoteVideo.style.setProperty('object-position','center center','important');remoteVideo.style.setProperty('width','100%','important');remoteVideo.style.setProperty('height','100%','important');$('remotePlaceholder').style.display='none'}};p.onconnectionstatechange=()=>{if(p===pc&&p.connectionState==='connected')status('Video connected')};return p}
 async function offer(){const p=makePC(),o=await p.createOffer();await p.setLocalDescription(o);socket.emit('video-signal',{type:'offer',payload:p.localDescription})}
 async function signal(d){if(mode!=='video'||!d)return;try{if(d.type==='offer'){const p=makePC();await p.setRemoteDescription(d.payload);for(const c of pending)await p.addIceCandidate(c);pending=[];const a=await p.createAnswer();await p.setLocalDescription(a);socket.emit('video-signal',{type:'answer',payload:p.localDescription})}else if(d.type==='answer'){if(!pc)return;await pc.setRemoteDescription(d.payload);for(const c of pending)await pc.addIceCandidate(c);pending=[]}else if(d.type==='ice-candidate'){if(pc?.remoteDescription)await pc.addIceCandidate(d.payload);else pending.push(d.payload)}}catch(e){toast('Video setup issue: '+e.message)}}
