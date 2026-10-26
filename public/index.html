@@ -129,4 +129,137 @@ socket.on('matched',async d=>{partnerId=d.partnerId;matched=true;searching=false
 socket.on('receive-message',t=>msg(String(t),''));socket.on('video-signal',signal);socket.on('partner-left',()=>{matched=searching=false;partnerId=null;closePeer();if(mode==='video')stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Stranger left';status('Stranger disconnected');msg('The stranger left. Find someone new.')});
 addEventListener('beforeunload',()=>{socket.disconnect();if(localStream)localStream.getTracks().forEach(t=>t.stop())})
 })();
+
+/* Full-screen StrangerChat layout */
+@media (min-width: 761px) {
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+  }
+
+  header {
+    height: 54px !important;
+    min-height: 54px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 10px 16px 4px !important;
+    min-height: calc(100dvh - 54px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  .intro {
+    display: none !important;
+  }
+
+  .mode-grid {
+    flex-shrink: 0 !important;
+    margin: 0 0 10px !important;
+    gap: 10px !important;
+  }
+
+  .mode-card {
+    padding: 10px 14px !important;
+  }
+
+  .layout {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr) !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    align-items: stretch !important;
+  }
+
+  #videoPanel {
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .caption {
+    flex-shrink: 0 !important;
+    padding: 8px 12px !important;
+  }
+
+  .video-grid {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 8px !important;
+    gap: 10px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .video-card {
+    min-height: 0 !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+  }
+
+  .video-card video {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  #localVideo,
+  #remoteVideo {
+    transform: scaleX(-1) !important;
+  }
+
+  .controls, .hint {
+    flex-shrink: 0 !important;
+  }
+
+  .side {
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  .messages {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .bottom {
+    margin: 4px 0 0 !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .video-card {
+    aspect-ratio: 4 / 3 !important;
+    min-height: 120px !important;
+  }
+
+  .video-card video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+}
 </script></body></html>
