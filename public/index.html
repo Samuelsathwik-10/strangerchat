@@ -53,6 +53,57 @@ main{width:min(1440px,96vw)!important;margin:24px auto!important}.intro{margin-b
 /* Mirror only your own camera preview; keep the stranger's video unmirrored. */
 #localVideo { transform: scaleX(-1) !important; }
 #remoteVideo { transform: scaleX(-1) !important; }
+
+
+/* Full-screen, large-video layout inspired by the reference screenshot */
+html, body { min-height:100%; }
+body { min-height:100vh; min-height:100dvh; background:#f8fafc!important; color:#172033!important; overflow-x:hidden; }
+header { height:56px!important; padding:0 2vw!important; position:relative!important; }
+main { width:100%!important; max-width:none!important; margin:0!important; padding:10px 1.5vw 8px!important; }
+.intro { display:none!important; }
+.mode-grid { grid-template-columns:1fr 1fr!important; gap:10px!important; margin:0 0 10px!important; }
+.mode-card { padding:10px 14px!important; min-height:58px!important; border-radius:10px!important; }
+.mode-icon { width:36px!important; height:36px!important; border-radius:10px!important; }
+.layout { width:100%!important; max-width:none!important; grid-template-columns:minmax(0,2.2fr) minmax(270px,.8fr)!important; gap:12px!important; align-items:stretch!important; }
+#videoPanel { min-width:0!important; display:flex; flex-direction:column; }
+#videoPanel.hidden { display:none!important; }
+.caption { padding:10px 14px!important; background:#fff!important; }
+.video-grid { flex:1 1 auto!important; min-height:0!important; padding:10px!important; gap:10px!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; align-items:stretch!important; }
+.video-card { width:100%!important; height:calc(100vh - 250px)!important; height:calc(100dvh - 250px)!important; min-height:320px!important; max-height:none!important; aspect-ratio:auto!important; border-radius:8px!important; background:#111827!important; }
+.video-card video { display:block!important; width:100%!important; height:100%!important; object-fit:contain!important; background:#111827!important; }
+.placeholder { background:#111827!important; color:#e5e7eb!important; }
+.avatar { background:#1673d1!important; color:white!important; }
+.video-label { background:#ffffffed!important; color:#172033!important; border:1px solid #dbe3ef!important; }
+.controls { padding:0 10px 10px!important; }
+.side { min-height:0!important; height:100%!important; }
+.messages { min-height:0!important; max-height:none!important; height:calc(100vh - 385px)!important; height:calc(100dvh - 385px)!important; overflow:auto!important; background:#fff!important; }
+.chat-head,.compose,.safety { background:#fff!important; }
+.bottom { margin:6px 0 0!important; }
+@media(min-width:761px) {
+  body { overflow-y:hidden; }
+  main { height:calc(100vh - 56px)!important; height:calc(100dvh - 56px)!important; display:flex; flex-direction:column; }
+  .mode-grid { flex:0 0 auto; }
+  .layout { flex:1 1 auto!important; min-height:0!important; }
+  #videoPanel { min-height:0!important; }
+  .video-grid { min-height:0!important; }
+  .video-card { height:100%!important; min-height:0!important; }
+  .side { min-height:0!important; }
+  .messages { flex:1 1 auto!important; height:auto!important; }
+}
+@media(max-width:760px) {
+  body { overflow-y:auto!important; }
+  main { padding:8px 3vw 12px!important; height:auto!important; }
+  .mode-grid { gap:7px!important; }
+  .mode-card { padding:8px!important; gap:7px!important; }
+  .mode-copy small { font-size:11px!important; }
+  .layout { grid-template-columns:1fr!important; }
+  .video-grid { padding:8px!important; gap:7px!important; }
+  .video-card { height:clamp(210px,42vh,360px)!important; min-height:210px!important; }
+  .side { min-height:390px!important; }
+  .messages { height:auto!important; min-height:180px!important; max-height:280px!important; }
+  .bottom { margin-bottom:8px!important; }
+}
+
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
