@@ -1,4 +1,3 @@
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -12,6 +11,7 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Each queued user is { id, socket, mode }.
 let waitingQueue = [];
 
 function removeFromQueue(socketId) {
@@ -21,11 +21,9 @@ function removeFromQueue(socketId) {
 function endPartner(socket, notifyPartner = true) {
   const partnerId = socket.partnerId;
   socket.partnerId = null;
-
   if (!partnerId) return;
 
   const partnerSocket = io.sockets.sockets.get(partnerId);
-
   if (partnerSocket) {
     partnerSocket.partnerId = null;
     if (notifyPartner) partnerSocket.emit('partner-left');
@@ -35,34 +33,25 @@ function endPartner(socket, notifyPartner = true) {
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
+  // Client sends "chat" or "video".
   socket.on('find-partner', (modeValue) => {
     const mode = modeValue === 'video' ? 'video' : 'chat';
-
     removeFromQueue(socket.id);
     endPartner(socket);
 
+    // Only match users who selected the same mode.
     const index = waitingQueue.findIndex(user =>
-      user.id !== socket.id &&
-      user.mode === mode &&
+      user.id !== socket.id && user.mode === mode &&
       io.sockets.sockets.has(user.id)
     );
 
     if (index !== -1) {
       const partner = waitingQueue.splice(index, 1)[0];
-
       socket.partnerId = partner.id;
       partner.socket.partnerId = socket.id;
 
-      socket.emit('matched', {
-        partnerId: partner.id,
-        initiator: true
-      });
-
-      partner.socket.emit('matched', {
-        partnerId: socket.id,
-        initiator: false
-      });
-
+      socket.emit('matched', { partnerId: partner.id, initiator: true });
+      partner.socket.emit('matched', { partnerId: socket.id, initiator: false });
       console.log(`Matched ${socket.id} with ${partner.id} (${mode})`);
     } else {
       waitingQueue.push({ id: socket.id, socket, mode });
@@ -70,6 +59,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // WebRTC signaling relay. The client already knows its matched partner.
   socket.on('video-signal', (data) => {
     if (socket.partnerId && data) {
       io.to(socket.partnerId).emit('video-signal', data);
@@ -78,14 +68,8 @@ io.on('connection', (socket) => {
 
   socket.on('send-message', (text) => {
     if (socket.partnerId) {
-      const message = typeof text === 'string'
-        ? text
-        : String(text?.text ?? '');
-
-      io.to(socket.partnerId).emit(
-        'receive-message',
-        message.slice(0, 1000)
-      );
+      const message = typeof text === 'string' ? text : String(text?.text ?? '');
+      io.to(socket.partnerId).emit('receive-message', message.slice(0, 1000));
     }
   });
 
@@ -102,7 +86,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => {
   console.log(`StrangerChat Server running on port ${PORT}`);
 });
