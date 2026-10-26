@@ -6,8 +6,13 @@
 
 /* Larger video panels */
 .layout {
-  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr) !important;
-  gap: 16px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 10px auto !important;
+  align-items: stretch !important;
 }
 
 .video-grid {
@@ -18,7 +23,8 @@
 
 .video-grid video {
   width: 100% !important;
-  height: 380px !important;
+ height: 100% !important;
+min-height: 0 !important;
   object-fit: contain !important;
   background: #08080d !important;
   border-radius: 16px !important;
@@ -48,7 +54,8 @@ main { width:100% !important; max-width:none !important; margin:0 !important; pa
 .caption,.chat-head { padding:10px 14px !important; background:#fff !important; color:#172033 !important; border-bottom:1px solid #e5eaf1 !important; }
 .caption small,.chat-head small { color:#64748b !important; }
 .video-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; padding:10px !important; width:100% !important; align-items:stretch !important; }
-.video-card { position:relative !important; width:100% !important; height:calc(100dvh - 190px) !important; min-height:390px !important; max-height:none !important; aspect-ratio:auto !important; background:#101318 !important; border:1px solid #dce3ed !important; border-radius:8px !important; overflow:hidden !important; }
+.video-card { position:relative !important; width:100% !important;height: calc(100dvh - 130px) !important;
+min-height: 500px !important; max-height:none !important; aspect-ratio:auto !important; background:#101318 !important; border:1px solid #dce3ed !important; border-radius:8px !important; overflow:hidden !important; }
 .video-card video { display:block !important; width:100% !important; height:100% !important; object-fit:contain !important; background:#101318 !important; }
 #localVideo,#remoteVideo { transform:scaleX(-1) !important; }
 .placeholder { background:#20242c !important; color:#f8fafc !important; }
