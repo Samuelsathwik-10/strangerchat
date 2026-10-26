@@ -106,11 +106,19 @@
     let partnerId = null;
 
     // Default ICE Configuration including standard STUN & Metered TURN fallback
-    let iceServers = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun.metered.ca:80' }
-    ];
+   let iceServers = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { 
+    urls: [
+      "turn:global.relay.metered.ca:80",
+      "turn:global.relay.metered.ca:443",
+      "turn:global.relay.metered.ca:443?transport=tcp"
+    ],
+    username: "YOUR_ACTUAL_USERNAME",
+    credential: "YOUR_ACTUAL_PASSWORD"
+  }
+];
 
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
