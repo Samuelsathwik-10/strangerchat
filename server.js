@@ -1,74 +1,93 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-app.use(express.static("public"));
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-// waiting queues per mode
-const waiting = { text: [], video: [] };
-const partner = new Map(); // socket.id -> partner socket.id
+app.use(express.static(path.join(__dirname, 'public')));
 
-function removeFromQueues(id) {
-  for (const m of Object.keys(waiting)) waiting[m] = waiting[m].filter((s) => s !== id);
-}
-function broadcastCount() { io.emit("online", io.engine.clientsCount); }
+// Waiting queue for video and text matching
+let waitingQueue = [];
 
-function disconnectPair(id, notify = true) {
-  const p = partner.get(id);
-  if (p) {
-    partner.delete(p);
-    if (notify) io.to(p).emit("partner-left");
-  }
-  partner.delete(id);
-}
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id}`);
 
-io.on("connection", (socket) => {
-  broadcastCount();
+  // Find a match or join waiting queue
+  socket.on('find_partner', (data) => {
+    // Remove if user is already in queue
+    waitingQueue = waitingQueue.filter(user => user.id !== socket.id);
 
-  socket.on("find", (mode) => {
-    mode = mode === "video" ? "video" : "text";
-    disconnectPair(socket.id);
-    removeFromQueues(socket.id);
-    const q = waiting[mode];
-    let other = null;
-    while (q.length && !other) {
-      const cand = q.shift();
-      if (cand !== socket.id && io.sockets.sockets.has(cand)) other = cand;
-    }
-    if (other) {
-      partner.set(socket.id, other);
-      partner.set(other, socket.id);
-      io.to(other).emit("matched", { initiator: true, mode });
-      socket.emit("matched", { initiator: false, mode });
+    if (waitingQueue.length > 0) {
+      // Match found
+      const partner = waitingQueue.shift();
+      
+      socket.partnerId = partner.id;
+      partner.socket.partnerId = socket.id;
+
+      // Notify both clients and decide initiator
+      socket.emit('match_found', { partnerId: partner.id, initiator: true });
+      partner.socket.emit('match_found', { partnerId: socket.id, initiator: false });
     } else {
-      q.push(socket.id);
-      socket.emit("waiting");
+      // Add to queue
+      waitingQueue.push({ id: socket.id, socket: socket, interests: data?.interests || [] });
+      socket.emit('waiting_for_partner');
     }
   });
 
-  socket.on("signal", (data) => {
-    const p = partner.get(socket.id);
-    if (p) io.to(p).emit("signal", data);
+  // WebRTC Signaling
+  socket.on('signal', (data) => {
+    if (data.target) {
+      io.to(data.target).emit('signal', {
+        sender: socket.id,
+        signal: data.signal
+      });
+    }
   });
-  socket.on("message", (text) => {
-    const p = partner.get(socket.id);
-    if (p && typeof text === "string") io.to(p).emit("message", text.slice(0, 1000));
+
+  // Chat message relay
+  socket.on('send_message', (data) => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit('receive_message', { text: data.text });
+    }
   });
-  socket.on("typing", (v) => {
-    const p = partner.get(socket.id);
-    if (p) io.to(p).emit("typing", !!v);
+
+  // Typing indicator
+  socket.on('typing', (data) => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit('partner_typing', { isTyping: data.isTyping });
+    }
   });
-  socket.on("report", () => { /* hook: log/store reports here */ console.log("report from", socket.id); });
-  socket.on("leave", () => { removeFromQueues(socket.id); disconnectPair(socket.id); });
-  socket.on("disconnect", () => {
-    removeFromQueues(socket.id);
-    disconnectPair(socket.id);
-    broadcastCount();
+
+  // Next / Skip partner
+  socket.on('skip_partner', () => {
+    cleanUpPartner(socket);
   });
+
+  // Disconnect handler
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+    waitingQueue = waitingQueue.filter(user => user.id !== socket.id);
+    cleanUpPartner(socket);
+  });
+
+  function cleanUpPartner(userSocket) {
+    if (userSocket.partnerId) {
+      io.to(userSocket.partnerId).emit('partner_left');
+      const partnerSocket = io.sockets.sockets.get(userSocket.partnerId);
+      if (partnerSocket) {
+        partnerSocket.partnerId = null;
+      }
+      userSocket.partnerId = null;
+    }
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("StrangerChat running on " + PORT));
+server.listen(PORT, () => {
+  console.log(`StrangerChat Server running on port ${PORT}`);
+});
