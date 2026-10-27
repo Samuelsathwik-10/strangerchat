@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b10"><title>StrangerChat — A little less alone</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f6f8"><title>StrangerChat — A little less alone</title>
 <style>
 
 :root {
@@ -141,42 +141,39 @@ input:focus { outline: 2px solid #b8dcfa; border-color: var(--blue); }
 }
 
 
-/* Mobile video-call layout only: desktop styles above remain unchanged. */
+/* Mobile video-call layout: two equally large feeds; desktop remains unchanged. */
 @media (max-width: 760px) {
-  body:has(#videoPanel:not(.hidden)) { background:#0f1720; }
-  body:has(#videoPanel:not(.hidden)) header { position:relative; z-index:5; }
-  body:has(#videoPanel:not(.hidden)) main { padding:0; min-height:calc(100dvh - 56px); display:block; }
+  body:has(#videoPanel:not(.hidden)) { background:#0f1720; overflow-x:hidden; }
+  body:has(#videoPanel:not(.hidden)) header { display:none !important; }
+  body:has(#videoPanel:not(.hidden)) main { padding:0; margin:0; width:100%; min-height:100dvh; height:100dvh; display:block; }
   body:has(#videoPanel:not(.hidden)) .intro,
   body:has(#videoPanel:not(.hidden)) .mode-grid,
   body:has(#videoPanel:not(.hidden)) .bottom { display:none !important; }
-  body:has(#videoPanel:not(.hidden)) .layout { display:block; width:100%; margin:0; }
-  body:has(#videoPanel:not(.hidden)) #videoPanel { display:flex; flex-direction:column; border:0; border-radius:0; box-shadow:none; background:#0f1720; min-height:0; overflow:visible; }
+  body:has(#videoPanel:not(.hidden)) .layout { display:block; width:100%; height:100dvh; margin:0; }
+  body:has(#videoPanel:not(.hidden)) #videoPanel { display:flex; flex-direction:column; width:100%; height:100dvh; min-height:0; border:0; border-radius:0; box-shadow:none; background:#0f1720; overflow:hidden; }
   body:has(#videoPanel:not(.hidden)) #videoPanel > .caption,
   body:has(#videoPanel:not(.hidden)) #videoPanel > .hint,
   body:has(#videoPanel:not(.hidden)) #videoPanel > .controls,
   body:has(#videoPanel:not(.hidden)) #videoPanel > .toast { display:none !important; }
-  body:has(#videoPanel:not(.hidden)) .video-grid { position:relative; display:block; flex:none; width:100%; height:calc(100dvh - 190px); min-height:360px; padding:0; margin:0; overflow:hidden; background:#000; }
-  body:has(#videoPanel:not(.hidden)) .video-card { position:absolute; border:0; border-radius:0; min-height:0; aspect-ratio:auto; }
-  /* Stranger is the main full-width feed; contain preserves the whole camera image. */
-  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(2) { inset:0; width:100%; height:100%; background:#000; }
-  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(2) video { width:100%; height:100%; object-fit:contain; }
-  /* Your own feed becomes a small floating preview in the upper-right corner. */
-  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(1) { z-index:3; top:12px; right:12px; width:clamp(96px,28vw,140px); height:clamp(128px,36vw,180px); border:2px solid #fff; border-radius:12px; box-shadow:0 3px 14px #0006; }
-  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(1) video { width:100%; height:100%; object-fit:cover; border-radius:10px; }
-  body:has(#videoPanel:not(.hidden)) .video-label { left:8px; bottom:8px; font-size:11px; padding:4px 7px; }
-  body:has(#videoPanel:not(.hidden)) .side { position:fixed; z-index:10; left:0; right:0; bottom:env(safe-area-inset-bottom, 0px); min-height:0; border:0; border-radius:0; background:transparent; box-shadow:none; pointer-events:none; }
+  body:has(#videoPanel:not(.hidden)) .video-grid { position:relative; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(2,minmax(0,1fr)); gap:2px; flex:1 1 auto; width:100%; height:100%; min-height:0; padding:0; margin:0; overflow:hidden; background:#000; }
+  body:has(#videoPanel:not(.hidden)) .video-card { position:relative; inset:auto; order:initial; z-index:1; display:block; width:100%; height:100%; min-width:0; min-height:0; aspect-ratio:auto; border:0; border-radius:0; background:#0f1720; overflow:hidden; }
+  /* Put the stranger first, then show your own camera at the same size. */
+  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(2) { grid-row:1; }
+  body:has(#videoPanel:not(.hidden)) .video-card:nth-child(1) { grid-row:2; }
+  body:has(#videoPanel:not(.hidden)) .video-card video { display:block; width:100%; height:100%; object-fit:contain; background:#0f1720; }
+  body:has(#videoPanel:not(.hidden)) #localVideo { transform:scaleX(-1); }
+  body:has(#videoPanel:not(.hidden)) .placeholder { background:#111923; color:#e2e8f0; }
+  body:has(#videoPanel:not(.hidden)) .video-label { left:10px; bottom:10px; font-size:12px; padding:5px 9px; z-index:2; }
+  body:has(#videoPanel:not(.hidden)) .side { position:fixed; z-index:10; left:0; right:0; bottom:env(safe-area-inset-bottom,0px); min-height:0; border:0; border-radius:0; background:transparent; box-shadow:none; pointer-events:none; }
   body:has(#videoPanel:not(.hidden)) .side > .chat-head,
   body:has(#videoPanel:not(.hidden)) .side > .messages,
   body:has(#videoPanel:not(.hidden)) .side > .compose,
   body:has(#videoPanel:not(.hidden)) .side > .safety { display:none !important; }
-  body:has(#videoPanel:not(.hidden)) .side > .controls { display:flex; justify-content:center; gap:12px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:linear-gradient(transparent,#0007); pointer-events:auto; }
+  body:has(#videoPanel:not(.hidden)) .side > .controls { display:flex; justify-content:center; gap:12px; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); background:linear-gradient(transparent,#0009); pointer-events:auto; }
   body:has(#videoPanel:not(.hidden)) .side .btn { min-width:92px; padding:13px 22px; border-radius:10px; font-size:16px; box-shadow:0 2px 8px #0002; }
   body:has(#videoPanel:not(.hidden)) .side #findBtn { background:#1677d2; color:#fff; }
   body:has(#videoPanel:not(.hidden)) .side #nextBtn { background:#fff0e3; color:#9b4b08; border:1px solid #ffd1a8; }
   body:has(#videoPanel:not(.hidden)) .side #leaveBtn { background:#fff; color:#17212b; border:1px solid #dce3e8; }
-}
-@media (max-width: 420px) {
-  body:has(#videoPanel:not(.hidden)) .video-grid { height:calc(100dvh - 170px); min-height:330px; }
 }
 </style></head><body>
 <header><div class="logo">stranger<span>chat.</span></div><div class="tag">A little less alone.</div><div class="status" id="status">● Connecting…</div></header>
