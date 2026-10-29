@@ -84,10 +84,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("next-partner", () => {
-    removeFromQueue(socket.id);
-    disconnectPartner(socket.id);
-    findPartner(socket, userModes.get(socket.id) || "chat");
-  });
+  removeFromQueue(socket.id);
+  disconnectPartner(socket.id);
+  findPartner(socket, userModes.get(socket.id) || "chat");
+});
+
+socket.on("leave-chat", () => {
+  removeFromQueue(socket.id);
+  disconnectPartner(socket.id);
+});
 
   socket.on("disconnect", () => {
     removeFromQueue(socket.id);
