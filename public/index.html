@@ -198,7 +198,28 @@ async function offer(){const p=makePC(),o=await p.createOffer();await p.setLocal
 async function signal(d){if(mode!=='video'||!d)return;try{if(d.type==='offer'){const p=makePC();await p.setRemoteDescription(d.payload);for(const c of pending)await p.addIceCandidate(c);pending=[];const a=await p.createAnswer();await p.setLocalDescription(a);socket.emit('video-signal',{type:'answer',payload:p.localDescription})}else if(d.type==='answer'){if(!pc)return;await pc.setRemoteDescription(d.payload);for(const c of pending)await pc.addIceCandidate(c);pending=[]}else if(d.type==='ice-candidate'){if(pc?.remoteDescription)await pc.addIceCandidate(d.payload);else pending.push(d.payload)}}catch(e){toast('Video setup issue: '+e.message)}}
 function choose(m){if(matched||searching)leave();mode=m;$('chatModeBtn').classList.toggle('selected',m==='chat');$('videoModeBtn').classList.toggle('selected',m==='video');$('videoPanel').classList.toggle('hidden',m!=='video');$('conversationTitle').textContent=m==='chat'?'Text conversation':'Video conversation';$('messages').replaceChildren();msg(m==='chat'?'Text mode selected. Your camera and microphone stay off.':'Video mode selected. Permission is requested when you start.');$('partnerState').textContent='Not connected';$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;status('Ready when you are');clearToast()}
 async function find(){clearToast();$('findBtn').disabled=true;$('nextBtn').disabled=true;$('leaveBtn').disabled=false;if(partnerId)socket.emit('next-partner');closePeer();partnerId=null;matched=false;searching=true;if(mode==='video'){try{await media()}catch(e){toast(e.message);$('findBtn').disabled=false;$('leaveBtn').disabled=true;searching=false;return}}else stopMedia();$('messages').replaceChildren();msg('Looking for someone…');$('chatInput').disabled=$('sendBtn').disabled=true;$('partnerState').textContent='Searching…';status('Finding a stranger…');socket.emit('find-partner',mode)}
-function leave(){if(partnerId||searching)socket.emit('next-partner');partnerId=null;matched=searching=false;closePeer();stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Not connected';$('messages').replaceChildren();msg('You left. Find someone new whenever you are ready.');status('Ready when you are')}
+function leave(){
+  if(partnerId) socket.emit('leave-chat');
+
+  if(searching) socket.emit('leave-chat');
+
+  partnerId = null;
+  matched = false;
+  searching = false;
+
+  closePeer();
+  stopMedia();
+
+  $('chatInput').disabled = true;
+  $('sendBtn').disabled = true;
+  $('nextBtn').disabled = true;
+  $('findBtn').disabled = false;
+  $('leaveBtn').disabled = true;
+
+  $('partnerState').textContent = 'Not connected';
+  status('You left the chat');
+  msg('You have left. Press Find a stranger to start again.');
+}
 const mobileCallLabels=()=>{const mobile=window.matchMedia('(max-width: 760px)').matches;$('findBtn').textContent=mobile?'Start':'Find a stranger';$('nextBtn').textContent=mobile?'Next':'Next stranger';$('leaveBtn').textContent=mobile?'Stop':'Leave'};mobileCallLabels();window.addEventListener('resize',mobileCallLabels);$('chatModeBtn').onclick=()=>choose('chat');$('videoModeBtn').onclick=()=>choose('video');$('findBtn').onclick=find;$('nextBtn').onclick=find;$('leaveBtn').onclick=leave;
 $('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatInput').value.trim();if(!t||!matched)return;socket.emit('send-message',t);msg(t,'me');$('chatInput').value=''};
 $('cameraBtn').onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cameraBtn').textContent='Camera: '+(t.enabled?'On':'Off')}};$('micBtn').onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('micBtn').textContent='Mic: '+(t.enabled?'On':'Off')}};
