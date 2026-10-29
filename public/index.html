@@ -205,7 +205,26 @@ $('cameraBtn').onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t){t.ena
 socket.on('connect',()=>{status('Connected to server');$('findBtn').disabled=false});socket.on('online-count',count=>{const n=Number(count);if(Number.isFinite(n)&&n>=0)$('onlineCount').textContent=n+' online'});socket.on('disconnect',()=>{status('Disconnected');matched=searching=false;partnerId=null;closePeer();stopMedia();$('findBtn').disabled=false;$('chatInput').disabled=$('sendBtn').disabled=true});
 socket.on('waiting',()=>{searching=true;status('Waiting for someone…');$('partnerState').textContent='Searching…';msg('Waiting for someone to join…')});
 socket.on('matched',async d=>{partnerId=d.partnerId;matched=true;searching=false;clearToast();$('messages').replaceChildren();msg('You’re connected. Say hello!');$('partnerState').textContent='Connected';$('chatInput').disabled=$('sendBtn').disabled=false;$('findBtn').disabled=false;$('nextBtn').disabled=$('leaveBtn').disabled=false;status('Matched with a stranger');if(mode==='video'){try{await media();if(d.initiator)await offer()}catch(e){toast('Video issue: '+e.message)}}});
-socket.on('receive-message',t=>msg(String(t),''));socket.on('video-signal',signal);socket.on('partner-left',()=>{matched=searching=false;partnerId=null;closePeer();if(mode==='video')stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Stranger left';status('Stranger disconnected');msg('The stranger left. Find someone new.')});
-addEventListener('beforeunload',()=>{socket.disconnect();if(localStream)localStream.getTracks().forEach(t=>t.stop())})
+socket.on('receive-message',t=>msg(String(t),''));socket.on('video-signal',signal);socket.on('partner-left',()=>{
+  if(!matched && !partnerId) return;
+
+  matched = false;
+  partnerId = null;
+  closePeer();
+
+  $('chatInput').disabled = true;
+  $('sendBtn').disabled = true;
+  $('nextBtn').disabled = true;
+  $('findBtn').disabled = true;
+  $('leaveBtn').disabled = false;
+
+  $('partnerState').textContent = 'Searching...';
+  status('Stranger left. Finding someone new...');
+  msg('The stranger left. Searching for another stranger...');
+
+  searching = true;
+  socket.emit('find-partner', mode);
+});
+  addEventListener('beforeunload',()=>{socket.disconnect();if(localStream)localStream.getTracks().forEach(t=>t.stop())})
 })();
 </script></body></html>
