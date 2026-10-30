@@ -1,93 +1,159 @@
+
+'use strict';
+
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
 const path = require('path');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Waiting queue for video and text matching
-let waitingQueue = [];
+// Separate matching queues for text and video chat
+const waitingUsers = {
+  chat: new Set(),
+  video: new Set()
+};
 
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+const partners = new Map();
+const userModes = new Map();
 
-  // Find a match or join waiting queue
-  socket.on('find_partner', (data) => {
-    // Remove if user is already in queue
-    waitingQueue = waitingQueue.filter(user => user.id !== socket.id);
+// Online user counter
+function broadcastOnlineCount() {
+  io.emit('online-count', io.engine.clientsCount);
+}
 
-    if (waitingQueue.length > 0) {
-      // Match found
-      const partner = waitingQueue.shift();
-      
-      socket.partnerId = partner.id;
-      partner.socket.partnerId = socket.id;
+// Remove user from all waiting queues
+function removeFromQueue(id) {
+  waitingUsers.chat.delete(id);
+  waitingUsers.video.delete(id);
+}
 
-      // Notify both clients and decide initiator
-      socket.emit('match_found', { partnerId: partner.id, initiator: true });
-      partner.socket.emit('match_found', { partnerId: socket.id, initiator: false });
-    } else {
-      // Add to queue
-      waitingQueue.push({ id: socket.id, socket: socket, interests: data?.interests || [] });
-      socket.emit('waiting_for_partner');
-    }
-  });
+// Disconnect two matched users
+function disconnectPartner(id) {
+  const partnerId = partners.get(id);
 
-  // WebRTC Signaling
-  socket.on('signal', (data) => {
-    if (data.target) {
-      io.to(data.target).emit('signal', {
-        sender: socket.id,
-        signal: data.signal
+  if (!partnerId) return;
+
+  partners.delete(id);
+  partners.delete(partnerId);
+
+  io.to(partnerId).emit('partner-left');
+}
+
+// Find a stranger in the same mode
+function findPartner(socket, requestedMode) {
+  const mode = requestedMode === 'video' ? 'video' : 'chat';
+
+  removeFromQueue(socket.id);
+  disconnectPartner(socket.id);
+
+  userModes.set(socket.id, mode);
+
+  for (const id of waitingUsers[mode]) {
+    if (id !== socket.id && io.sockets.sockets.has(id)) {
+      waitingUsers[mode].delete(id);
+
+      partners.set(socket.id, id);
+      partners.set(id, socket.id);
+
+      socket.emit('matched', {
+        partnerId: id,
+        initiator: true
       });
-    }
-  });
 
-  // Chat message relay
-  socket.on('send_message', (data) => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit('receive_message', { text: data.text });
-    }
-  });
+      io.to(id).emit('matched', {
+        partnerId: socket.id,
+        initiator: false
+      });
 
-  // Typing indicator
-  socket.on('typing', (data) => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit('partner_typing', { isTyping: data.isTyping });
-    }
-  });
-
-  // Next / Skip partner
-  socket.on('skip_partner', () => {
-    cleanUpPartner(socket);
-  });
-
-  // Disconnect handler
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-    waitingQueue = waitingQueue.filter(user => user.id !== socket.id);
-    cleanUpPartner(socket);
-  });
-
-  function cleanUpPartner(userSocket) {
-    if (userSocket.partnerId) {
-      io.to(userSocket.partnerId).emit('partner_left');
-      const partnerSocket = io.sockets.sockets.get(userSocket.partnerId);
-      if (partnerSocket) {
-        partnerSocket.partnerId = null;
-      }
-      userSocket.partnerId = null;
+      return;
     }
   }
+
+  waitingUsers[mode].add(socket.id);
+  socket.emit('waiting');
+}
+
+io.on('connection', (socket) => {
+  broadcastOnlineCount();
+
+  // Find a stranger
+  socket.on('find-partner', (mode) => {
+    findPartner(socket, mode);
+  });
+
+  // Text messages
+  socket.on('send-message', (message) => {
+    const partnerId = partners.get(socket.id);
+
+    if (!partnerId || typeof message !== 'string') return;
+
+    const text = message.trim().slice(0, 1000);
+
+    if (text) {
+      io.to(partnerId).emit('receive-message', text);
+    }
+  });
+
+  // WebRTC video signalling
+  socket.on('video-signal', (data) => {
+    const partnerId = partners.get(socket.id);
+
+    if (
+      !partnerId ||
+      userModes.get(socket.id) !== 'video' ||
+      !data ||
+      typeof data !== 'object'
+    ) return;
+
+    if (!['offer', 'answer', 'ice-candidate'].includes(data.type)) {
+      return;
+    }
+
+    io.to(partnerId).emit('video-signal', {
+      type: data.type,
+      payload: data.payload
+    });
+  });
+
+  // Skip current stranger and find another
+  socket.on('next-partner', () => {
+    removeFromQueue(socket.id);
+    disconnectPartner(socket.id);
+
+    findPartner(
+      socket,
+      userModes.get(socket.id) || 'chat'
+    );
+  });
+
+  // Leave completely without searching again
+  socket.on('leave-chat', () => {
+    removeFromQueue(socket.id);
+    disconnectPartner(socket.id);
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    removeFromQueue(socket.id);
+    disconnectPartner(socket.id);
+    userModes.delete(socket.id);
+
+    broadcastOnlineCount();
+  });
+});
+
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
 });
 
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
-  console.log(`StrangerChat Server running on port ${PORT}`);
+  console.log(`StrangerChat running on port ${PORT}`);
 });
