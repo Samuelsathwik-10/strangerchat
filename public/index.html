@@ -146,6 +146,7 @@ input:focus { outline: 2px solid #b8dcfa; border-color: var(--blue); }
 
 
 /* Mobile video-call layout: two equally large feeds; desktop remains unchanged. */
+#chatLauncher { display:none; }
 @media (max-width: 760px) {
   body:has(#videoPanel:not(.hidden)) { background:#0f1720; overflow-x:hidden; }
   body:has(#videoPanel:not(.hidden)) header { display:none !important; }
@@ -171,17 +172,32 @@ input:focus { outline: 2px solid #b8dcfa; border-color: var(--blue); }
   body:has(#videoPanel:not(.hidden)) .side { position:fixed; z-index:10; left:0; right:0; bottom:env(safe-area-inset-bottom,0px); min-height:0; border:0; border-radius:0; background:transparent; box-shadow:none; pointer-events:none; }
   body:has(#videoPanel:not(.hidden)) .side > .chat-head,
   body:has(#videoPanel:not(.hidden)) .side > .safety { display:none !important; }
-  body:has(#videoPanel:not(.hidden)) .side > .messages {
-    display:flex !important; position:relative; width:100%; max-height:105px; min-height:0;
-    overflow-y:auto; padding:7px 12px; gap:5px; background:rgba(255,255,255,.94);
-    border-top:1px solid #dce3e8; pointer-events:auto;
+  /* Compact mobile chat: a small launcher expands into a floating chat panel. */
+  body:has(#videoPanel:not(.hidden)) .side > .messages,
+  body:has(#videoPanel:not(.hidden)) .side > .compose { display:none !important; }
+  body:has(#videoPanel:not(.hidden)) .side.chat-open > .messages {
+    display:flex !important; position:fixed; z-index:21; left:12px; right:12px;
+    bottom:calc(158px + env(safe-area-inset-bottom,0px)); height: min(34dvh,260px);
+    min-height:90px; max-height:260px; overflow:auto; border:1px solid #dce3e8;
+    border-bottom:0; border-radius:14px 14px 0 0; box-shadow:0 8px 28px #0003;
   }
-  body:has(#videoPanel:not(.hidden)) .side > .compose {
-    display:flex !important; width:100%; padding:7px 10px; gap:7px;
-    background:rgba(255,255,255,.97); border-top:1px solid #dce3e8; pointer-events:auto;
+  body:has(#videoPanel:not(.hidden)) .side.chat-open > .compose {
+    display:flex !important; position:fixed; z-index:22; left:12px; right:12px;
+    bottom:calc(106px + env(safe-area-inset-bottom,0px)); border:1px solid #dce3e8;
+    border-radius:0 0 14px 14px; box-shadow:0 8px 28px #0003; pointer-events:auto;
   }
-  body:has(#videoPanel:not(.hidden)) .side > .compose input { min-height:38px; }
-  body:has(#videoPanel:not(.hidden)) .side > .controls { display:flex; justify-content:center; gap:12px; padding:9px 16px calc(9px + env(safe-area-inset-bottom,0px)); background:linear-gradient(transparent,#0009); pointer-events:auto; }
+  body:has(#videoPanel:not(.hidden)) #chatLauncher {
+    display:flex; position:fixed; z-index:23; left:14px;
+    bottom:calc(105px + env(safe-area-inset-bottom,0px)); align-items:center; gap:7px;
+    padding:11px 15px; border:0; border-radius:999px; background:#1677d2; color:#fff;
+    font-weight:700; font-size:14px; box-shadow:0 3px 14px #0004; pointer-events:auto;
+  }
+  body:has(#videoPanel:not(.hidden)) .side.chat-open #chatLauncher {
+    left:auto; right:16px; bottom:calc(160px + env(safe-area-inset-bottom,0px));
+    padding:7px 11px; font-size:12px; background:#263747;
+  }
+  body:has(#videoPanel:not(.hidden)) #chatLauncher .chat-count { display:none; }
+  body:has(#videoPanel:not(.hidden)) .side > .controls { display:flex; justify-content:center; gap:12px; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); background:linear-gradient(transparent,#0009); pointer-events:auto; }
   body:has(#videoPanel:not(.hidden)) .side .btn { min-width:92px; padding:13px 22px; border-radius:10px; font-size:16px; box-shadow:0 2px 8px #0002; }
   body:has(#videoPanel:not(.hidden)) .side #findBtn { background:#1677d2; color:#fff; }
   body:has(#videoPanel:not(.hidden)) .side #nextBtn { background:#fff0e3; color:#9b4b08; border:1px solid #ffd1a8; }
@@ -192,7 +208,7 @@ input:focus { outline: 2px solid #b8dcfa; border-color: var(--blue); }
 <main><section class="intro"><div class="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</div><h1>Meet someone beyond your world.</h1><p>New perspectives. Real conversations. Your choice.</p></section>
 <section class="mode-grid"><button class="mode-card selected" id="chatModeBtn"><span class="mode-icon">✦</span><span class="mode-copy"><strong>Text chat</strong><small>No camera. Just conversation.</small></span><span class="arrow">↗</span></button><button class="mode-card" id="videoModeBtn"><span class="mode-icon">◉</span><span class="mode-copy"><strong>Video chat</strong><small>Face-to-face, with text too.</small></span><span class="arrow">↗</span></button></section>
 <div class="layout"><section class="panel hidden" id="videoPanel"><div class="caption"><strong>Live video</strong><small>Video mode only</small></div><div class="video-grid"><div class="video-card"><video id="localVideo" autoplay muted playsinline></video><div class="placeholder" id="localPlaceholder"><div class="avatar">☺</div><b>Your camera</b><small>Preview appears here</small></div><span class="video-label">You</span></div><div class="video-card"><video id="remoteVideo" autoplay playsinline></video><div class="placeholder" id="remotePlaceholder"><div class="avatar">?</div><b>Stranger</b><small>Waiting for a connection</small></div><span class="video-label">Stranger</span></div></div><div class="controls"><button class="btn quiet" id="cameraBtn">Camera: On</button><button class="btn quiet" id="micBtn">Mic: On</button></div><div class="toast" id="toast"></div><div class="hint">Camera and microphone permission are requested only in Video Chat.</div></section>
-<section class="panel side"><div class="chat-head"><strong id="conversationTitle">Text conversation</strong><small id="partnerState">Not connected</small></div><div class="messages" id="messages"><div class="message system">Choose a mode, then find someone new.</div></div><form class="compose" id="chatForm"><input id="chatInput" placeholder="Write a friendly message…" maxlength="1000" autocomplete="off" disabled><button class="btn primary" id="sendBtn" disabled>Send</button></form><div class="controls" style="padding-top:12px"><button class="btn primary" id="findBtn">Find a stranger</button><button class="btn secondary" id="nextBtn" disabled>Next stranger</button><button class="btn quiet" id="leaveBtn" disabled>Leave</button></div><div class="safety">Be kind. Never share passwords, your address, or financial details. Leave conversations that make you uncomfortable.</div></section></div><div class="bottom">StrangerChat · One conversation at a time.</div></main>
+<section class="panel side"><div class="chat-head"><strong id="conversationTitle">Text conversation</strong><small id="partnerState">Not connected</small></div><div class="messages" id="messages"><div class="message system">Choose a mode, then find someone new.</div></div><form class="compose" id="chatForm"><input id="chatInput" placeholder="Write a friendly message…" maxlength="1000" autocomplete="off" disabled><button class="btn primary" id="sendBtn" disabled>Send</button></form><button type="button" id="chatLauncher" aria-expanded="false" aria-label="Open chat">💬 <span class="chat-label">Chat</span><span class="chat-count">· Message</span></button><div class="controls" style="padding-top:12px"><button class="btn primary" id="findBtn">Find a stranger</button><button class="btn secondary" id="nextBtn" disabled>Next stranger</button><button class="btn quiet" id="leaveBtn" disabled>Leave</button></div><div class="safety">Be kind. Never share passwords, your address, or financial details. Leave conversations that make you uncomfortable.</div></section></div><div class="bottom">StrangerChat · One conversation at a time.</div></main>
 <script src="/socket.io/socket.io.js"></script><script>
 (()=>{const $=id=>document.getElementById(id),socket=io(),localVideo=$('localVideo'),remoteVideo=$('remoteVideo');let mode='chat',localStream=null,pc=null,partnerId=null,matched=false,searching=false,pending=[];
 const rtc={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
@@ -205,10 +221,10 @@ function makePC(){if(pc&&pc.signalingState!=='closed')return pc;pc=new RTCPeerCo
 async function offer(){const p=makePC(),o=await p.createOffer();await p.setLocalDescription(o);socket.emit('video-signal',{type:'offer',payload:p.localDescription})}
 async function signal(d){if(mode!=='video'||!d)return;try{if(d.type==='offer'){const p=makePC();await p.setRemoteDescription(d.payload);for(const c of pending)await p.addIceCandidate(c);pending=[];const a=await p.createAnswer();await p.setLocalDescription(a);socket.emit('video-signal',{type:'answer',payload:p.localDescription})}else if(d.type==='answer'){if(!pc)return;await pc.setRemoteDescription(d.payload);for(const c of pending)await pc.addIceCandidate(c);pending=[]}else if(d.type==='ice-candidate'){if(pc?.remoteDescription)await pc.addIceCandidate(d.payload);else pending.push(d.payload)}}catch(e){toast('Video setup issue: '+e.message)}}
 function choose(m){if(matched||searching)leave();mode=m;$('chatModeBtn').classList.toggle('selected',m==='chat');$('videoModeBtn').classList.toggle('selected',m==='video');$('videoPanel').classList.toggle('hidden',m!=='video');$('conversationTitle').textContent=m==='chat'?'Text conversation':'Video conversation';$('messages').replaceChildren();msg(m==='chat'?'Text mode selected. Your camera and microphone stay off.':'Video mode selected. Permission is requested when you start.');$('partnerState').textContent='Not connected';$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;status('Ready when you are');clearToast()}
-async function find(){clearToast();$('findBtn').disabled=true;$('nextBtn').disabled=true;$('leaveBtn').disabled=false;const hadPartner=Boolean(partnerId);if(hadPartner)socket.emit('next-partner');closePeer();partnerId=null;matched=false;searching=true;if(mode==='video'){try{await media()}catch(e){toast(e.message);$('findBtn').disabled=false;$('leaveBtn').disabled=true;searching=false;return}}else stopMedia();$('messages').replaceChildren();msg('Looking for someone…');$('chatInput').disabled=$('sendBtn').disabled=true;$('partnerState').textContent='Searching…';status('Finding a stranger…');if(!hadPartner)socket.emit('find-partner',mode)}
-function leave(){if(partnerId||searching)socket.emit('leave-chat');partnerId=null;matched=searching=false;closePeer();stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Not connected';$('messages').replaceChildren();msg('You left. Find someone new whenever you are ready.');status('Ready when you are')}
-const mobileCallLabels=()=>{const mobile=window.matchMedia('(max-width: 760px)').matches;$('findBtn').textContent=mobile?'Start':'Find a stranger';$('nextBtn').textContent=mobile?'Next':'Next stranger';$('leaveBtn').textContent=mobile?'Stop':'Leave'};mobileCallLabels();window.addEventListener('resize',mobileCallLabels);$('chatModeBtn').onclick=()=>choose('chat');$('videoModeBtn').onclick=()=>choose('video');$('findBtn').onclick=find;$('nextBtn').onclick=find;$('leaveBtn').onclick=leave;
-$('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatInput').value.trim();if(!t||!matched)return;socket.emit('send-message',t);msg(t,'me');$('chatInput').value=''};
+async function find(){clearToast();$('findBtn').disabled=true;$('nextBtn').disabled=true;$('leaveBtn').disabled=false;if(partnerId)socket.emit('next-partner');closePeer();partnerId=null;matched=false;searching=true;if(mode==='video'){try{await media()}catch(e){toast(e.message);$('findBtn').disabled=false;$('leaveBtn').disabled=true;searching=false;return}}else stopMedia();$('messages').replaceChildren();msg('Looking for someone…');$('chatInput').disabled=$('sendBtn').disabled=true;$('partnerState').textContent='Searching…';status('Finding a stranger…');socket.emit('find-partner',mode)}
+function leave(){if(partnerId||searching)socket.emit('next-partner');partnerId=null;matched=searching=false;closePeer();stopMedia();$('chatInput').disabled=$('sendBtn').disabled=$('nextBtn').disabled=$('leaveBtn').disabled=true;$('findBtn').disabled=false;$('partnerState').textContent='Not connected';$('messages').replaceChildren();msg('You left. Find someone new whenever you are ready.');status('Ready when you are')}
+function setChatOpen(open){const side=document.querySelector('.side');if(!side)return;side.classList.toggle('chat-open',open);$('chatLauncher').setAttribute('aria-expanded',String(open));$('chatLauncher').innerHTML=open?'✕ <span class=\"chat-label\">Close chat</span>':'💬 <span class=\"chat-label\">Chat</span><span class=\"chat-count\">· Message</span>'}const mobileCallLabels=()=>{const mobile=window.matchMedia('(max-width: 760px)').matches;$('findBtn').textContent=mobile?'Start':'Find a stranger';$('nextBtn').textContent=mobile?'Next':'Next stranger';$('leaveBtn').textContent=mobile?'Stop':'Leave';if(!mobile)setChatOpen(false)};mobileCallLabels();window.addEventListener('resize',mobileCallLabels);$('chatLauncher').onclick=()=>setChatOpen(!document.querySelector('.side').classList.contains('chat-open'));$('chatModeBtn').onclick=()=>choose('chat');$('videoModeBtn').onclick=()=>choose('video');$('findBtn').onclick=find;$('nextBtn').onclick=find;$('leaveBtn').onclick=leave;
+$('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatInput').value.trim();if(!t||!matched)return;socket.emit('send-message',t);msg(t,'me');$('chatInput').value='';if(mode==='video'&&window.matchMedia('(max-width: 760px)').matches)setChatOpen(false)};
 $('cameraBtn').onclick=()=>{const t=localStream?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cameraBtn').textContent='Camera: '+(t.enabled?'On':'Off')}};$('micBtn').onclick=()=>{const t=localStream?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('micBtn').textContent='Mic: '+(t.enabled?'On':'Off')}};
 socket.on('connect',()=>{status('Connected to server');$('findBtn').disabled=false});socket.on('online-count',count=>{const n=Number(count);if(Number.isFinite(n)&&n>=0)$('onlineCount').textContent=n+' online'});socket.on('disconnect',()=>{status('Disconnected');matched=searching=false;partnerId=null;closePeer();stopMedia();$('findBtn').disabled=false;$('chatInput').disabled=$('sendBtn').disabled=true});
 socket.on('waiting',()=>{searching=true;status('Waiting for someone…');$('partnerState').textContent='Searching…';msg('Waiting for someone to join…')});
