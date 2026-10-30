@@ -1,6 +1,4 @@
-
 'use strict';
-
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -8,152 +6,103 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
+const io = new Server(server, { cors: { origin: '*' }, pingInterval: 25000, pingTimeout: 20000 });
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Separate matching queues for text and video chat
-const waitingUsers = {
-  chat: new Set(),
-  video: new Set()
-};
+const waitingQueue = [];
 
-const partners = new Map();
-const userModes = new Map();
-
-// Online user counter
 function broadcastOnlineCount() {
   io.emit('online-count', io.engine.clientsCount);
 }
-
-// Remove user from all waiting queues
 function removeFromQueue(id) {
-  waitingUsers.chat.delete(id);
-  waitingUsers.video.delete(id);
+  for (let i = waitingQueue.length - 1; i >= 0; i--) {
+    if (waitingQueue[i].id === id) waitingQueue.splice(i, 1);
+  }
 }
-
-// Disconnect two matched users
-function disconnectPartner(id) {
-  const partnerId = partners.get(id);
-
-  if (!partnerId) return;
-
-  partners.delete(id);
-  partners.delete(partnerId);
-
-  io.to(partnerId).emit('partner-left');
+function detachPartner(socket) {
+  const partnerId = socket.partnerId;
+  if (!partnerId) return null;
+  socket.partnerId = null;
+  const partner = io.sockets.sockets.get(partnerId);
+  if (partner) partner.partnerId = null;
+  return partner || null;
 }
-
-// Find a stranger in the same mode
-function findPartner(socket, requestedMode) {
+function findPartner(socket, requestedMode, avoidId = null) {
   const mode = requestedMode === 'video' ? 'video' : 'chat';
-
   removeFromQueue(socket.id);
-  disconnectPartner(socket.id);
+  if (socket.partnerId) detachPartner(socket);
 
-  userModes.set(socket.id, mode);
-
-  for (const id of waitingUsers[mode]) {
-    if (id !== socket.id && io.sockets.sockets.has(id)) {
-      waitingUsers[mode].delete(id);
-
-      partners.set(socket.id, id);
-      partners.set(id, socket.id);
-
-      socket.emit('matched', {
-        partnerId: id,
-        initiator: true
-      });
-
-      io.to(id).emit('matched', {
-        partnerId: socket.id,
-        initiator: false
-      });
-
-      return;
-    }
+  const index = waitingQueue.findIndex(item =>
+    item.mode === mode &&
+    io.sockets.sockets.has(item.id) &&
+    item.id !== socket.id &&
+    item.avoidId !== socket.id &&
+    item.id !== avoidId
+  );
+  if (index < 0) {
+    socket.chatMode = mode;
+    waitingQueue.push({ id: socket.id, mode, avoidId });
+    socket.emit('waiting');
+    return;
   }
 
-  waitingUsers[mode].add(socket.id);
-  socket.emit('waiting');
+  const waiting = waitingQueue.splice(index, 1)[0];
+  const partner = io.sockets.sockets.get(waiting.id);
+  if (!partner) return findPartner(socket, mode, avoidId);
+
+  socket.partnerId = partner.id;
+  partner.partnerId = socket.id;
+  socket.chatMode = partner.chatMode = mode;
+  socket.emit('matched', { partnerId: partner.id, initiator: true, mode });
+  partner.emit('matched', { partnerId: socket.id, initiator: false, mode });
 }
 
-io.on('connection', (socket) => {
+io.on('connection', socket => {
+  console.log('User connected:', socket.id);
   broadcastOnlineCount();
 
-  // Find a stranger
-  socket.on('find-partner', (mode) => {
-    findPartner(socket, mode);
+  socket.on('find-partner', mode => findPartner(socket, mode));
+
+  socket.on('send-message', raw => {
+    if (!socket.partnerId) return;
+    const text = String(typeof raw === 'object' ? raw?.text ?? '' : raw).trim().slice(0, 1000);
+    if (text) io.to(socket.partnerId).emit('receive-message', text);
   });
 
-  // Text messages
-  socket.on('send-message', (message) => {
-    const partnerId = partners.get(socket.id);
-
-    if (!partnerId || typeof message !== 'string') return;
-
-    const text = message.trim().slice(0, 1000);
-
-    if (text) {
-      io.to(partnerId).emit('receive-message', text);
+  socket.on('typing', data => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit('partner-typing', Boolean(data?.isTyping ?? data));
     }
   });
 
-  // WebRTC video signalling
-  socket.on('video-signal', (data) => {
-    const partnerId = partners.get(socket.id);
-
-    if (
-      !partnerId ||
-      userModes.get(socket.id) !== 'video' ||
-      !data ||
-      typeof data !== 'object'
-    ) return;
-
-    if (!['offer', 'answer', 'ice-candidate'].includes(data.type)) {
-      return;
+  socket.on('video-signal', data => {
+    if (socket.partnerId && socket.chatMode === 'video') {
+      io.to(socket.partnerId).emit('video-signal', data);
     }
-
-    io.to(partnerId).emit('video-signal', {
-      type: data.type,
-      payload: data.payload
-    });
   });
 
-  // Skip current stranger and find another
   socket.on('next-partner', () => {
     removeFromQueue(socket.id);
-    disconnectPartner(socket.id);
-
-    findPartner(
-      socket,
-      userModes.get(socket.id) || 'chat'
-    );
+    const previousPartnerId = socket.partnerId || null;
+    const previousPartner = detachPartner(socket);
+    findPartner(socket, socket.chatMode || 'chat', previousPartnerId);
+    if (previousPartner) previousPartner.emit('partner-left', { reason: 'next' });
   });
 
-  // Leave completely without searching again
   socket.on('leave-chat', () => {
     removeFromQueue(socket.id);
-    disconnectPartner(socket.id);
+    const previousPartner = detachPartner(socket);
+    if (previousPartner) previousPartner.emit('partner-left', { reason: 'left' });
   });
 
-  // Handle disconnection
   socket.on('disconnect', () => {
     removeFromQueue(socket.id);
-    disconnectPartner(socket.id);
-    userModes.delete(socket.id);
-
+    const previousPartner = detachPartner(socket);
+    if (previousPartner) previousPartner.emit('partner-left', { reason: 'disconnect' });
+    console.log('User disconnected:', socket.id);
     broadcastOnlineCount();
   });
 });
 
-// Health check
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
-
 const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log(`StrangerChat running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`StrangerChat server running on port ${PORT}`));
