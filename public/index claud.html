@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="StrangerChat: talk to strangers by text or video. Free, no sign-up, works in your browser.">
+<meta property="og:title" content="StrangerChat – Talk to Strangers"><meta property="og:description" content="Free text and video chat with random people. No sign-up."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%231e6fe8%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 font-family=%27Arial%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3ES%3C/text%3E%3C/svg%3E">
+<title>StrangerChat – Talk to Strangers</title>
+<style>
+:root{--or:#1e6fe8;--bl:#1a5fd0;--rd:#d93a3a;--ink:#16243d;--mut:#5b6b85;--line:#cfdcf3;--soft:#eef4ff}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#fff;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:16px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
+a{color:var(--bl)}
+/* ---------- home ---------- */
+#home{height:100%;overflow-y:auto}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line)}
+.logo{font-size:2rem;font-weight:700;color:var(--or);letter-spacing:-.03em}
+.online{color:var(--mut);font-size:.95rem}.online b{color:var(--ink)}
+.hero{max-width:760px;margin:0 auto;padding:38px 22px 26px;text-align:center}
+.hero h1{font-size:clamp(1.7rem,5vw,2.4rem);color:var(--ink)}
+.hero h1 em{color:var(--or);font-style:normal}
+.hero .sub{color:var(--mut);margin:10px auto 22px;max-width:520px;line-height:1.5}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:22px;display:grid;gap:16px;text-align:left}
+.card label.t{font-weight:700;display:block;margin-bottom:6px}
+#tags{width:100%;border:1px solid #bbb;border-radius:4px;padding:11px;font:inherit}
+.hint{color:var(--mut);font-size:.85rem;margin-top:4px}
+.age{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;line-height:1.4}
+.age input{margin-top:2px;width:18px;height:18px;flex:none;accent-color:var(--bl)}
+.go{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.go button{border:0;border-radius:4px;padding:16px;font-size:1.15rem;font-weight:700;color:#fff;background:var(--bl)}
+.go button:hover:not(:disabled){filter:brightness(1.1)}
+.go button:disabled{background:#b7cbef;cursor:not-allowed}
+.go small{display:block;font-weight:400;font-size:.8rem;opacity:.9;margin-top:2px}
+.info{max-width:760px;margin:0 auto;padding:10px 22px 40px;display:grid;gap:30px;line-height:1.6}
+.info h2{font-size:1.3rem;margin-bottom:10px;color:var(--ink)}
+.info p,.info li{color:#444}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.feat div{border:1px solid var(--line);border-radius:6px;padding:14px}
+.feat h3{font-size:1rem;color:var(--or);margin-bottom:4px}
+.info ul,.info ol{padding-left:22px;display:grid;gap:6px}
+details{border-top:1px solid var(--line);padding:12px 0}
+summary{cursor:pointer;font-weight:700}
+details p{margin-top:8px}
+footer{border-top:1px solid var(--line);padding:18px 22px;text-align:center;color:var(--mut);font-size:.88rem}
+footer button{background:none;border:0;color:var(--bl);text-decoration:underline;padding:0 6px;font-size:.88rem}
+dialog{max-width:520px;width:92%;border:1px solid var(--line);border-radius:8px;padding:22px;line-height:1.55}
+dialog::backdrop{background:#0006}
+dialog h2{margin-bottom:10px}dialog p{margin-bottom:8px;color:#444}dialog button{margin-top:10px;border:0;border-radius:4px;background:var(--bl);color:#fff;padding:10px 18px;font-weight:700}
+/* ---------- chat ---------- */
+#app{display:none;height:100%;flex-direction:column}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--line)}
+.bar .logo{font-size:1.5rem}
+.wrap{flex:1;display:flex;min-height:0}
+#videos{width:min(42%,460px);display:flex;flex-direction:column;gap:8px;padding:8px;border-right:1px solid var(--line);background:var(--soft)}
+.box{position:relative;flex:1;min-height:0;background:#000;border-radius:4px;overflow:hidden}
+.box video{width:100%;height:100%;object-fit:contain;background:#000}
+#local{transform:scaleX(-1)}
+.tag{position:absolute;left:8px;top:8px;background:#000a;color:#fff;padding:3px 9px;border-radius:12px;font-size:.78rem}
+#status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ddd;background:#000b;text-align:center;padding:16px;font-size:.95rem}
+#chat{flex:1;display:flex;flex-direction:column;min-width:0}
+#log{flex:1;overflow-y:auto;padding:14px;line-height:1.5;font-size:1rem}
+#log p{margin-bottom:6px;word-wrap:break-word}
+#log .me b{color:var(--bl)}#log .them b{color:var(--rd)}#log .sys{color:var(--mut);font-size:.92rem}
+#typing{height:20px;padding:0 14px;color:var(--mut);font-size:.85rem}
+.send{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--soft)}
+.send button{border:1px solid #999;border-radius:4px;background:#fff;padding:0 16px;font-weight:700;min-height:44px}
+.send button.new{background:var(--bl);color:#fff;border-color:var(--bl)}
+.send button.stop{background:var(--rd);color:#fff;border-color:var(--rd)}
+#msg{flex:1;min-width:0;border:1px solid #aaa;border-radius:4px;padding:10px;font:inherit;resize:none;height:44px}
+body.textonly #videos{display:none}
+@media(max-width:800px){
+ .wrap{flex-direction:column}
+ #app{height:100dvh}
+ #videos{position:relative;display:block;width:100%;height:46%;padding:0;border-right:0;border-bottom:1px solid var(--line);background:#000}
+ #videos .box{position:absolute;inset:0;border-radius:0}
+ #videos .box:last-child{inset:auto 8px 8px auto;width:28%;height:34%;border-radius:8px;border:2px solid #fff;z-index:2}
+ .send{flex-wrap:wrap}#msg{flex-basis:100%;order:-1}.send button{flex:1}
+}
+@media(prefers-reduced-motion:no-preference){.go button{transition:filter .15s}}
+#home{background:linear-gradient(#e6f0ff,#fff 460px)}
+.card{background:#fff;box-shadow:0 4px 18px #1a5fd01a}
+.feat div{background:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two select{width:100%;padding:11px;border:1px solid #bbb;border-radius:4px;font:inherit;background:#fff}
+.lk{margin-top:8px;line-height:1.9}.lk a{margin:0 4px}
+</style>
+</head>
+<body>
+<div id="home">
+  <div class="top"><span class="logo">StrangerChat</span><span style="display:flex;gap:14px;align-items:center"><a href="/premium.html">Premium</a><span id="gsign"></span><span class="online"><b id="cnt">0</b> online now</span></span></div>
+  <div class="hero">
+    <h1>Talk to <em>strangers!</em></h1>
+    <p class="sub">Meet someone new in seconds. Chat by text or video, free, with no sign-up and nothing to install.</p>
+    <div class="card">
+      <div>
+        <label class="t" for="tags">What do you want to talk about?</label>
+        <input id="tags" placeholder="music, cricket, movies" maxlength="80" autocomplete="off">
+        <p class="hint">Optional. Separate with commas. We try to match you with someone who shares one.</p>
+      </div>
+      <div class="two">
+        <div><label class="t" for="lang">Language</label><select id="lang"><option value="">Any language</option><option>English</option><option>Hindi</option><option>Telugu</option><option>Tamil</option><option>Spanish</option><option>French</option><option>Arabic</option><option>Portuguese</option><option>Russian</option><option>German</option><option>Indonesian</option><option>Turkish</option></select></div>
+        <div><label class="t" for="region">Region</label><select id="region"><option value="">Anywhere</option><option>Asia</option><option>Europe</option><option>North America</option><option>South America</option><option>Africa</option><option>Oceania</option></select></div>
+      </div>
+      <p class="hint" style="margin-top:-8px">Language and region are preferences. If nobody matches, you are paired with the next person so you never wait long.</p>
+      <label class="age"><input type="checkbox" id="age"><span>I am 18 or older, and I have read and agree to the <button type="button" class="lnk" data-d="rules" style="background:none;border:0;color:var(--bl);text-decoration:underline;padding:0;font:inherit">rules</button>.</span></label>
+      <div class="go">
+        <button id="bt" disabled>Text<small>chat only</small></button>
+        <button id="bv" disabled>Video<small>needs camera</small></button>
+      </div>
+    </div>
+  </div>
+  <div id="ad" style="text-align:center;max-width:760px;margin:0 auto"></div>
+  <div class="info">
+    <section>
+      <h2>Why StrangerChat</h2>
+      <div class="feat">
+        <div><h3>Free and fast</h3><p>No account, no payment. Press a button and you are matched.</p></div>
+        <div><h3>Interest matching</h3><p>Add interests and we look for someone who likes the same things.</p></div>
+        <div><h3>Text or video</h3><p>Start with text, or turn on your camera for a face to face chat.</p></div>
+        <div><h3>Any device</h3><p>Works in the browser on Android, iPhone, Windows and Mac.</p></div>
+      </div>
+    </section>
+    <section>
+      <h2>How it works</h2>
+      <ol><li>Add interests if you like, tick the 18+ box, and choose Text or Video.</li><li>You are connected to a random person who is also waiting.</li><li>Press <b>New</b> to meet someone else, or <b>Stop</b> to leave.</li></ol>
+    </section>
+    <section>
+      <h2>Staying safe</h2>
+      <ul>
+        <li>StrangerChat is for adults, 18 and older only.</li>
+        <li>Never share your full name, address, phone number or passwords.</li>
+        <li>Press <b>Report</b> if someone breaks the rules, then press <b>New</b>.</li>
+        <li>You do not need an account (Google sign-in is optional). Chat messages are not saved on our server.</li>
+        <li>An automatic filter blocks links and sexual or spam messages, and people reported by several users are blocked.</li>
+        <li>Video goes directly between browsers and is encrypted in transit. You can end any chat instantly.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Questions</h2>
+      <details><summary>Is StrangerChat free?</summary><p>Yes. Text chat and video chat are free.</p></details>
+      <details><summary>Can children use it?</summary><p>No. It is only for people aged 18 and older.</p></details>
+      <details><summary>Do I need to install an app?</summary><p>No. Open the website in Chrome or Safari and start chatting.</p></details>
+      <details><summary>How do interests work?</summary><p>If someone with a matching interest is waiting, you are paired with them first. If nobody matches, you are paired with the next person.</p></details>
+      <details><summary>Why is the other person's video blank?</summary><p>Allow camera and microphone when your browser asks, close other apps using the camera, then press New. On some phones you may need to tap the video to start it.</p></details>
+      <details><summary>How do I report someone?</summary><p>Press Report in the chat, then press New to leave.</p></details>
+    </section>
+  </div>
+  <footer>© 2026 StrangerChat <button data-d="rules">Rules</button><button data-d="terms">Terms</button><button data-d="privacy">Privacy</button><span id="contact"></span><div class="lk"><a href="/random-video-chat.html">Random video chat</a> · <a href="/talk-to-strangers.html">Talk to strangers</a> · <a href="/text-chat.html">Text chat</a> · <a href="/omegle-alternative.html">Omegle alternative</a> · <a href="/safety.html">Safety tips</a> · <a href="/about.html">About</a> · <a href="/premium.html">Premium</a></div></footer>
+</div>
+
+<dialog id="d-rules"><h2>Rules</h2><p>You must be 18 or older.</p><p>No nudity, sexual content, harassment, hate, threats, or illegal activity.</p><p>No spam, advertising or asking for personal details.</p><p>Do not record or share other people's video or messages.</p><p>Breaking these rules can get you blocked.</p><button>Close</button></dialog>
+<dialog id="d-terms"><h2>Terms</h2><p>StrangerChat connects you with random strangers. We do not control what they say or show, so use it at your own risk and use common sense.</p><p>You are responsible for what you send. The service is provided as is, and may change or stop at any time.</p><button>Close</button></dialog>
+<dialog id="d-privacy"><h2>Privacy</h2><p>You do not need an account. Signing in with Google is optional, and only your first name is shown. Nothing from it is stored. Chat messages are passed to your partner and are not saved on our server.</p><p>Video and audio go between your browser and your partner's browser. If a direct link is not possible, they pass through an encrypted relay.</p><p>Reports and basic connection logs may be kept to keep the site safe.</p><button>Close</button></dialog>
+
+<dialog id="d-report"><h2>Report this person</h2><p>What happened?</p>
+<select id="reason" style="width:100%;padding:10px;font:inherit;border:1px solid #aaa;border-radius:4px"><option value="sexual">Nudity or sexual content</option><option value="underage">Seems under 18</option><option value="harassment">Harassment or hate</option><option value="spam">Spam or ads</option><option value="other">Something else</option></select>
+<button id="rsend">Report and find someone new</button> <button style="background:#777">Cancel</button></dialog>
+<div id="blocked" style="display:none;position:fixed;inset:0;background:#fff;z-index:9;align-items:center;justify-content:center;text-align:center;padding:24px"><div><h2>You have been blocked</h2><p style="color:#5b6b85;margin-top:8px">You were blocked for breaking the rules. Please try again later.</p></div></div>
+<div id="app">
+  <div class="bar"><span class="logo">StrangerChat</span><span class="online"><b id="cnt2">0</b> online</span></div>
+  <div class="wrap">
+    <section id="videos">
+      <div class="box"><video id="remote" autoplay playsinline></video><span class="tag">Stranger</span><div id="status">Connecting…</div></div>
+      <div class="box"><video id="local" autoplay playsinline muted></video><span class="tag">You</span></div>
+    </section>
+    <section id="chat">
+      <div id="log" aria-live="polite"></div><div id="typing"></div>
+      <div class="send">
+        <textarea id="msg" placeholder="Type a message and press Enter" maxlength="1000"></textarea>
+        <button class="new" id="next">New</button><button id="rep">Report</button><button class="stop" id="stop">Stop</button><button id="send">Send</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const socket=io();
+let mode="text",localStream=null,pc=null,matched=false,typingTimer,chain=Promise.resolve(),pending=[],failTimer;
+let ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+
+socket.on("online",n=>{$("cnt").textContent=$("cnt2").textContent=n});
+document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>$("d-"+b.dataset.d).showModal());
+document.querySelectorAll("dialog button").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+$("age").onchange=()=>{$("bt").disabled=$("bv").disabled=!$("age").checked};
+$("bt").onclick=()=>start("text");
+$("bv").onclick=()=>start("video");
+const getTags=()=>$("tags").value.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean).slice(0,5);
+
+async function start(m){
+  if(!$("age").checked)return;
+  mode=m;
+  document.body.classList.toggle("textonly",m==="text");
+  if(m==="video"){
+    try{localStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:true});$("local").srcObject=localStream}
+    catch(e){alert("Camera and microphone permission is required for video chat. Allow it in your browser and try again.");return}
+    try{const r=await fetch("/ice");ICE={iceServers:await r.json()}}catch(e){}
+  }
+  $("home").style.display="none";$("app").style.display="flex";
+  findNext();
+}
+function line(cls,who,t){
+  const p=document.createElement("p");p.className=cls;
+  if(who){const b=document.createElement("b");b.textContent=who+": ";p.appendChild(b)}
+  p.appendChild(document.createTextNode(t));$("log").appendChild(p);$("log").scrollTop=1e9;
+}
+const sys=t=>line("sys","",t),add=(t,me)=>line(me?"me":"them",me?"You":"Stranger",t);
+function closePC(){
+  clearTimeout(failTimer);
+  if(pc){pc.ontrack=pc.onicecandidate=pc.onconnectionstatechange=null;pc.close();pc=null}
+  $("remote").srcObject=null;pending=[];
+}
+function findNext(){
+  closePC();matched=false;$("log").innerHTML="";$("typing").textContent="";
+  $("status").onclick=null;$("status").style.display="flex";$("status").textContent="Looking for someone…";
+  sys("Looking for someone you can chat with…");
+  socket.emit("find",{mode,interests:getTags(),lang:$("lang").value,region:$("region").value});
+}
+function showStatus(t){$("status").style.display="flex";$("status").textContent=t}
+function makePC(initiator){
+  pc=new RTCPeerConnection(ICE);
+  chain=Promise.resolve();pending=[];
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.onicecandidate=e=>{if(e.candidate)socket.emit("signal",{candidate:e.candidate})};
+  pc.ontrack=e=>{
+    const r=$("remote");r.srcObject=e.streams[0];$("status").style.display="none";
+    r.play().catch(()=>{showStatus("Tap here to start the video");$("status").onclick=()=>{r.play();$("status").style.display="none"}});
+  };
+  pc.onconnectionstatechange=()=>{
+    if(!pc)return;
+    if(pc.connectionState==="connected")clearTimeout(failTimer);
+    if(pc.connectionState==="failed")showStatus("Could not connect video. Press New.");
+  };
+  clearTimeout(failTimer);
+  failTimer=setTimeout(()=>{if(pc&&pc.connectionState!=="connected")showStatus("Video is taking too long. Press New.")},20000);
+  if(initiator)pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>socket.emit("signal",{sdp:pc.localDescription}));
+}
+socket.on("matched",({initiator,common})=>{
+  matched=true;$("log").innerHTML="";
+  sys("You are now chatting with a random stranger. Say hi!");
+  if(common&&common.length)sys("You both like: "+common.join(", "));
+  if(mode==="video"){showStatus("Connecting video…");makePC(initiator)}else $("status").style.display="none";
+});
+socket.on("signal",d=>{
+  chain=chain.then(async()=>{
+    if(!pc)return;
+    try{
+      if(d.sdp){
+        await pc.setRemoteDescription(d.sdp);
+        if(d.sdp.type==="offer"){const a=await pc.createAnswer();await pc.setLocalDescription(a);socket.emit("signal",{sdp:pc.localDescription})}
+        for(const c of pending)await pc.addIceCandidate(c);
+        pending=[];
+      }else if(d.candidate){
+        if(pc.remoteDescription)await pc.addIceCandidate(d.candidate);else pending.push(d.candidate);
+      }
+    }catch(e){console.error(e)}
+  });
+});
+socket.on("partner-left",()=>{sys("Stranger has disconnected.");findNext()});
+socket.on("message",t=>{add(t,false);$("typing").textContent=""});
+socket.on("typing",v=>{$("typing").textContent=v?"Stranger is typing…":""});
+socket.on("disconnect",()=>sys("Connection to the server was lost. Reconnecting…"));
+socket.on("connect",()=>{if($("app").style.display==="flex"&&!matched)findNext()});
+
+function send(){const t=$("msg").value.trim();if(!t||!matched)return;if(/(https?:\/\/|www\.)/i.test(t)){sys("Links are not allowed.");return}socket.emit("message",t);add(t,true);$("msg").value="";socket.emit("typing",false)}
+$("send").onclick=send;
+$("msg").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("msg").addEventListener("input",()=>{if(!matched)return;socket.emit("typing",true);clearTimeout(typingTimer);typingTimer=setTimeout(()=>socket.emit("typing",false),1500)});
+$("next").onclick=()=>{socket.emit("leave");findNext()};
+$("rep").onclick=()=>{if(matched)$("d-report").showModal()};
+$("rsend").onclick=()=>{$("d-report").close();socket.emit("report",$("reason").value);socket.emit("leave");findNext();sys("Report sent. Thank you.")};
+socket.on("notice",t=>sys(t));
+socket.on("blocked",()=>{$("blocked").style.display="flex";if(localStream)localStream.getTracks().forEach(t=>t.stop())});
+fetch("/config").then(r=>r.json()).then(c=>{if(c.contact){const a=document.createElement("a");a.href="mailto:"+c.contact;a.textContent="Contact";a.style.marginLeft="10px";$("contact").appendChild(a)}}).catch(()=>{});
+$("stop").onclick=()=>{socket.emit("leave");closePC();if(localStream)localStream.getTracks().forEach(t=>t.stop());location.reload()};
+fetch("/config").then(r=>r.json()).then(c=>{
+  if(c.googleClientId){const g=document.createElement("script");g.src="https://accounts.google.com/gsi/client";g.async=true;g.onload=()=>{
+    google.accounts.id.initialize({client_id:c.googleClientId,callback:x=>fetch("/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:x.credential})}).then(r=>r.ok?r.json():Promise.reject()).then(u=>{$("gsign").textContent="Hi, "+u.name}).catch(()=>{})});
+    google.accounts.id.renderButton($("gsign"),{theme:"outline",size:"medium"})};document.head.appendChild(g)}
+  if(c.adsClient&&c.adsSlot){const a=document.createElement("script");a.async=true;a.crossOrigin="anonymous";a.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+encodeURIComponent(c.adsClient);document.head.appendChild(a);
+    $("ad").innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-client="'+c.adsClient+'" data-ad-slot="'+c.adsSlot+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';(window.adsbygoogle=window.adsbygoogle||[]).push({})}
+}).catch(()=>{});
+</script>
+</body>
+</html>
