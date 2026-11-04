@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Admin – StrangerChat</title><link rel="stylesheet" href="/page.css"><style>table{width:100%;border-collapse:collapse;font-size:.9rem;margin-bottom:20px}td,th{border-bottom:1px solid #cfdcf3;padding:6px;text-align:left;word-break:break-all}button,input{font:inherit;padding:6px 10px}</style></head><body><header><a class="logo" href="/">StrangerChat</a><span>Admin</span></header><main><h1>Reports and blocks</h1><p id="msg">Loading…</p><h2>Blocked</h2><table id="b"></table><h2>Block someone</h2><p><input id="ip" placeholder="IP address"> <input id="h" type="number" value="24" style="width:70px"> hours <button id="go">Block</button></p><h2>Recent reports</h2><table id="r"></table></main>
+<script>
+const key=new URLSearchParams(location.search).get("key")||"";
+const $=id=>document.getElementById(id);
+function row(t,cells,el){const tr=document.createElement("tr");cells.forEach(c=>{const d=document.createElement(t);if(c instanceof Node)d.appendChild(c);else d.textContent=c;tr.appendChild(d)});el.appendChild(tr)}
+async function load(){
+  const r=await fetch("/admin/reports?key="+encodeURIComponent(key));
+  if(!r.ok){$("msg").textContent="Wrong or missing key. Open /admin.html?key=YOURKEY";return}
+  const d=await r.json();
+  $("msg").textContent=d.database?"Database connected: blocks are saved.":"No database: blocks reset when the server restarts.";
+  $("b").innerHTML="";row("th",["IP","Until",""],$("b"));
+  d.blocked.forEach(b=>{const u=document.createElement("button");u.textContent="Unblock";u.onclick=()=>send(b.ip,0);row("td",[b.ip,b.until,u],$("b"))});
+  $("r").innerHTML="";row("th",["Time","Reported","By","Reason"],$("r"));
+  d.recent.forEach(e=>row("td",[e.time,e.target,e.reporter,e.reason],$("r")));
+}
+async function send(ip,hours){await fetch("/admin/block",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,ip,hours})});load()}
+$("go").onclick=()=>{if($("ip").value)send($("ip").value.trim(),Number($("h").value)||24)};
+load();
+</script></body></html>
