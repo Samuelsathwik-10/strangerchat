@@ -8,6 +8,24 @@ app.set("trust proxy", 1);
 const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 1e5 });
 
+// Optional database (free Upstash Redis) so blocks and reports survive restarts.
+const R_URL = process.env.UPSTASH_REDIS_REST_URL, R_TOK = process.env.UPSTASH_REDIS_REST_TOKEN;
+async function redis(cmd) {
+  if (!R_URL || !R_TOK) return null;
+  try {
+    const r = await fetch(R_URL, { method: "POST", headers: { Authorization: "Bearer " + R_TOK }, body: JSON.stringify(cmd) });
+    return (await r.json()).result;
+  } catch (e) { return null; }
+}
+const reqIp = (req) => String(req.headers["cf-connecting-ip"] || req.ip || "?");
+const hits = new Map();
+function hit(key, max, ms) {
+  const now = Date.now(), a = (hits.get(key) || []).filter((t) => now - t < ms);
+  if (a.length >= max) { hits.set(key, a); return false; }
+  a.push(now); hits.set(key, a); return true;
+}
+setInterval(() => { const now = Date.now(); for (const [k, a] of hits) if (!a.some((t) => now - t < 60000)) hits.delete(k); }, 60000);
+
 app.use((req, res, next) => {
   res.set({
     "X-Content-Type-Options": "nosniff",
@@ -17,11 +35,17 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json({ limit: "10kb" }));
+app.get("/", (req, res, next) => {
+  fs.readFile("public/index.html", "utf8", (err, html) => {
+    if (err) return next();
+    res.type("html").send(html.replace(/__BASE__/g, baseUrl(req)));
+  });
+});
 app.use(express.static("public"));
 
 /* ---------- small endpoints ---------- */
 app.get("/health", (req, res) => res.send("ok")); // ping this with UptimeRobot to keep the site awake
-const PAGES = ["/", "/random-video-chat.html", "/talk-to-strangers.html", "/text-chat.html", "/omegle-alternative.html", "/safety.html", "/about.html", "/premium.html"];
+const PAGES = ["/", "/random-video-chat.html", "/talk-to-strangers.html", "/text-chat.html", "/omegle-alternative.html", "/safety.html", "/about.html", "/premium.html", "/free-video-chat.html", "/make-new-friends-online.html", "/faq.html"];
 const baseUrl = (req) => (process.env.SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
 app.get("/robots.txt", (req, res) => res.type("text/plain").send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl(req)}/sitemap.xml\n`));
 app.get("/sitemap.xml", (req, res) => res.type("application/xml").send(
@@ -45,19 +69,38 @@ app.post("/auth/google", async (req, res) => {
   } catch (e) { res.sendStatus(500); }
 });
 
-// STUN/TURN settings. Set TURN_USER + TURN_PASS (and TURN_HOST if needed) on Render,
-// or ICE_SERVERS as a full JSON array.
-app.get("/ice", (req, res) => {
+// STUN/TURN settings for the browsers.
+// Best: METERED_DOMAIN (like yourname.metered.live) + METERED_SECRET_KEY -> short-lived passwords.
+// Fallback: TURN_USER + TURN_PASS (fixed), or ICE_SERVERS as a full JSON array.
+let tempCache = null;
+async function tempTurn() {
+  const d = process.env.METERED_DOMAIN, k = process.env.METERED_SECRET_KEY;
+  if (!d || !k) return null;
+  if (tempCache && tempCache.exp > Date.now()) return tempCache.val;
+  try {
+    const r = await fetch(`https://${d}/api/v1/turn/credential?secretKey=${encodeURIComponent(k)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expiryInSeconds: 7200, label: "strangerchat" }),
+    });
+    if (!r.ok) return null;
+    const c = await r.json();
+    if (!c.username || !c.password) return null;
+    tempCache = { exp: Date.now() + 3600000, val: { username: c.username, credential: c.password } };
+    return tempCache.val;
+  } catch (e) { return null; }
+}
+app.get("/ice", async (req, res) => {
+  if (!hit("ice:" + reqIp(req), 30, 60000)) return res.sendStatus(429);
   let servers = [{ urls: "stun:stun.l.google.com:19302" }];
   try {
     if (process.env.ICE_SERVERS) servers = JSON.parse(process.env.ICE_SERVERS);
-    else if (process.env.TURN_USER) {
-      const h = process.env.TURN_HOST || "global.relay.metered.ca";
-      servers.push({
-        urls: [`turn:${h}:80`, `turn:${h}:443`, `turns:${h}:443?transport=tcp`],
-        username: process.env.TURN_USER,
-        credential: process.env.TURN_PASS,
-      });
+    else {
+      const t = await tempTurn();
+      const user = t ? t.username : process.env.TURN_USER, pass = t ? t.credential : process.env.TURN_PASS;
+      if (user) {
+        const h = process.env.TURN_HOST || "global.relay.metered.ca";
+        servers.push({ urls: [`turn:${h}:80`, `turn:${h}:443`, `turns:${h}:443?transport=tcp`], username: user, credential: pass });
+      }
     }
   } catch (e) { console.error("ICE_SERVERS is not valid JSON"); }
   res.set("Cache-Control", "no-store").json(servers);
@@ -84,18 +127,33 @@ function addReport(targetIp, reporterIp, reason) {
   reportsOn.set(targetIp, m);
   const entry = { time: new Date(now).toISOString(), target: targetIp, reporter: reporterIp, reason };
   recent.push(entry); if (recent.length > 200) recent.shift();
+  redis(["LPUSH", "reports", JSON.stringify(entry)]); redis(["LTRIM", "reports", 0, 199]);
   fs.appendFile("reports.log", JSON.stringify(entry) + "\n", () => {});
   const limit = reason === "underage" ? 2 : 3; // different people needed, so one troll cannot ban anyone
-  if (m.size >= limit) { blocked.set(targetIp, now + DAY); return true; }
+  if (m.size >= limit) { blocked.set(targetIp, now + DAY); redis(["SET", "block:" + targetIp, "1", "EX", 86400]); return true; }
   return false;
 }
 
-app.get("/admin/reports", (req, res) => {
-  if (!process.env.ADMIN_KEY || req.query.key !== process.env.ADMIN_KEY) return res.sendStatus(404);
-  res.json({
-    blocked: [...blocked].filter(([, t]) => t > Date.now()).map(([ip, t]) => ({ ip, until: new Date(t).toISOString() })),
-    recent,
-  });
+const adminOk = (req) => process.env.ADMIN_KEY && (req.query.key === process.env.ADMIN_KEY || (req.body && req.body.key === process.env.ADMIN_KEY));
+app.get("/admin/reports", async (req, res) => {
+  if (!adminOk(req)) return res.sendStatus(404);
+  let list = recent.slice().reverse();
+  const stored = await redis(["LRANGE", "reports", 0, 99]);
+  if (Array.isArray(stored) && stored.length) list = stored.map((x) => { try { return JSON.parse(x); } catch (e) { return null; } }).filter(Boolean);
+  const keys = (await redis(["KEYS", "block:*"])) || [];
+  const mem = [...blocked].filter(([, t]) => t > Date.now()).map(([ip, t]) => ({ ip, until: new Date(t).toISOString() }));
+  const known = new Set(mem.map((b) => b.ip));
+  const extra = keys.map((k) => k.slice(6)).filter((ip) => !known.has(ip)).map((ip) => ({ ip, until: "within 24h" }));
+  res.json({ blocked: mem.concat(extra), recent: list, database: !!R_URL });
+});
+app.post("/admin/block", (req, res) => {
+  if (!adminOk(req)) return res.sendStatus(404);
+  const ip = String(req.body.ip || "").slice(0, 80);
+  const hours = Math.max(0, Math.min(720, Number(req.body.hours) || 0));
+  if (!ip) return res.sendStatus(400);
+  if (hours) { blocked.set(ip, Date.now() + hours * 3600000); redis(["SET", "block:" + ip, "1", "EX", hours * 3600]); }
+  else { blocked.delete(ip); redis(["DEL", "block:" + ip]); }
+  res.json({ ok: true });
 });
 
 // rate limiter: allow(socket, "message", 6, 5000) -> at most 6 per 5 seconds
@@ -135,6 +193,11 @@ io.on("connection", (socket) => {
   if (n > 6) { socket.emit("notice", "Too many open tabs from your network."); return socket.disconnect(true); }
   ipCount.set(ip, n);
   broadcastCount();
+  redis(["GET", "block:" + ip]).then((v) => {
+    if (!v) return;
+    if (!isBlocked(ip)) blocked.set(ip, Date.now() + DAY);
+    socket.emit("blocked", {}); socket.disconnect(true);
+  });
 
   socket.on("find", (d) => {
     if (!allow(socket, "find", 8, 10000)) return socket.emit("notice", "Slow down a little.");
@@ -170,7 +233,7 @@ io.on("connection", (socket) => {
     if (BAD.test(text)) {
       socket.data.strikes = (socket.data.strikes || 0) + 1;
       socket.emit("notice", "That message was blocked by the automatic filter.");
-      if (socket.data.strikes >= 5) { blocked.set(ip, Date.now() + 3600000); socket.emit("blocked", {}); socket.disconnect(true); }
+      if (socket.data.strikes >= 5) { blocked.set(ip, Date.now() + 3600000); redis(["SET", "block:" + ip, "1", "EX", 3600]); socket.emit("blocked", {}); socket.disconnect(true); }
       return;
     }
     io.to(p).emit("message", text.slice(0, 1000));
