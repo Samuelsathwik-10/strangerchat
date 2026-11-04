@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="StrangerChat: talk to strangers by text or video. Free, no sign-up, works in your browser.">
 <meta property="og:title" content="StrangerChat – Talk to Strangers"><meta property="og:description" content="Free text and video chat with random people. No sign-up."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%231e6fe8%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 font-family=%27Arial%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3ES%3C/text%3E%3C/svg%3E">
+<link rel="canonical" href="__BASE__/"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icon-192.png"><meta property="og:type" content="website"><meta property="og:url" content="__BASE__/"><meta property="og:image" content="__BASE__/og.png"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"StrangerChat","url":"__BASE__/"}</script>
 <title>StrangerChat – Talk to Strangers</title>
 <style>
 :root{--or:#1e6fe8;--bl:#1a5fd0;--rd:#d93a3a;--ink:#16243d;--mut:#5b6b85;--line:#cfdcf3;--soft:#eef4ff}
@@ -85,11 +86,14 @@ body.textonly #videos{display:none}
 .feat div{background:#fff}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two select{width:100%;padding:11px;border:1px solid #bbb;border-radius:4px;font:inherit;background:#fff}
 .lk{margin-top:8px;line-height:1.9}.lk a{margin:0 4px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px;border-top:1px solid var(--line)}.tools button{border:1px solid #b9c7e2;background:#fff;color:var(--ink);border-radius:4px;padding:6px 10px;font-size:.82rem;min-height:36px}
+#emojis{display:none;flex-wrap:wrap;gap:2px;padding:6px 10px;border-top:1px solid var(--line);background:#fff}#emojis.open{display:flex}#emojis button{border:0;background:none;font-size:1.3rem;padding:4px;cursor:pointer}
+body.textonly .vonly{display:none}
 </style>
 </head>
 <body>
 <div id="home">
-  <div class="top"><span class="logo">StrangerChat</span><span style="display:flex;gap:14px;align-items:center"><a href="/premium.html">Premium</a><span id="gsign"></span><span class="online"><b id="cnt">0</b> online now</span></span></div>
+  <div class="top"><span class="logo">StrangerChat</span><span style="display:flex;gap:14px;align-items:center"><a href="/premium.html">Premium</a><a href="#" id="inst" style="display:none">Install app</a><span id="gsign"></span><span class="online"><b id="cnt">0</b> online now</span></span></div>
   <div class="hero">
     <h1>Talk to <em>strangers!</em></h1>
     <p class="sub">Meet someone new in seconds. Chat by text or video, free, with no sign-up and nothing to install.</p>
@@ -147,7 +151,7 @@ body.textonly #videos{display:none}
       <details><summary>How do I report someone?</summary><p>Press Report in the chat, then press New to leave.</p></details>
     </section>
   </div>
-  <footer>© 2026 StrangerChat <button data-d="rules">Rules</button><button data-d="terms">Terms</button><button data-d="privacy">Privacy</button><span id="contact"></span><div class="lk"><a href="/random-video-chat.html">Random video chat</a> · <a href="/talk-to-strangers.html">Talk to strangers</a> · <a href="/text-chat.html">Text chat</a> · <a href="/omegle-alternative.html">Omegle alternative</a> · <a href="/safety.html">Safety tips</a> · <a href="/about.html">About</a> · <a href="/premium.html">Premium</a></div></footer>
+  <footer>© 2026 StrangerChat <button data-d="rules">Rules</button><button data-d="terms">Terms</button><button data-d="privacy">Privacy</button><span id="contact"></span><div class="lk"><a href="/random-video-chat.html">Random video chat</a> · <a href="/talk-to-strangers.html">Talk to strangers</a> · <a href="/text-chat.html">Text chat</a> · <a href="/omegle-alternative.html">Omegle alternative</a> · <a href="/safety.html">Safety tips</a> · <a href="/free-video-chat.html">Free video chat</a> · <a href="/make-new-friends-online.html">Make new friends</a> · <a href="/faq.html">FAQ</a> · <a href="/about.html">About</a> · <a href="/premium.html">Premium</a></div></footer>
 </div>
 
 <dialog id="d-rules"><h2>Rules</h2><p>You must be 18 or older.</p><p>No nudity, sexual content, harassment, hate, threats, or illegal activity.</p><p>No spam, advertising or asking for personal details.</p><p>Do not record or share other people's video or messages.</p><p>Breaking these rules can get you blocked.</p><button>Close</button></dialog>
@@ -167,6 +171,8 @@ body.textonly #videos{display:none}
     </section>
     <section id="chat">
       <div id="log" aria-live="polite"></div><div id="typing"></div>
+      <div class="tools"><button type="button" id="emo">Emoji</button><button type="button" id="mic" class="vonly">Mic on</button><button type="button" id="cam" class="vonly">Camera on</button><button type="button" id="fs" class="vonly">Full screen</button><button type="button" id="snd">Sound on</button></div>
+      <div id="emojis"></div>
       <div class="send">
         <textarea id="msg" placeholder="Type a message and press Enter" maxlength="1000"></textarea>
         <button class="new" id="next">New</button><button id="rep">Report</button><button class="stop" id="stop">Stop</button><button id="send">Send</button>
@@ -240,7 +246,7 @@ function makePC(initiator){
 }
 socket.on("matched",({initiator,common})=>{
   matched=true;$("log").innerHTML="";
-  sys("You are now chatting with a random stranger. Say hi!");
+  sys("You are now chatting with a random stranger. Say hi!");beep();
   if(common&&common.length)sys("You both like: "+common.join(", "));
   if(mode==="video"){showStatus("Connecting video…");makePC(initiator)}else $("status").style.display="none";
 });
@@ -260,7 +266,7 @@ socket.on("signal",d=>{
   });
 });
 socket.on("partner-left",()=>{sys("Stranger has disconnected.");findNext()});
-socket.on("message",t=>{add(t,false);$("typing").textContent=""});
+socket.on("message",t=>{add(t,false);$("typing").textContent="";notify()});
 socket.on("typing",v=>{$("typing").textContent=v?"Stranger is typing…":""});
 socket.on("disconnect",()=>sys("Connection to the server was lost. Reconnecting…"));
 socket.on("connect",()=>{if($("app").style.display==="flex"&&!matched)findNext()});
@@ -283,6 +289,22 @@ fetch("/config").then(r=>r.json()).then(c=>{
   if(c.adsClient&&c.adsSlot){const a=document.createElement("script");a.async=true;a.crossOrigin="anonymous";a.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+encodeURIComponent(c.adsClient);document.head.appendChild(a);
     $("ad").innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-client="'+c.adsClient+'" data-ad-slot="'+c.adsSlot+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';(window.adsbygoogle=window.adsbygoogle||[]).push({})}
 }).catch(()=>{});
+/* chat extras */
+let snd=true;const baseTitle=document.title;
+function beep(){if(!snd)return;try{const c=beep.c||(beep.c=new(window.AudioContext||window.webkitAudioContext)());const o=c.createOscillator(),g=c.createGain();o.frequency.value=660;g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.12)}catch(e){}}
+function notify(){beep();if(document.hidden)document.title="New message – StrangerChat"}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)document.title=baseTitle});
+const getTrack=k=>localStream&&localStream[k==="a"?"getAudioTracks":"getVideoTracks"]()[0];
+$("mic").onclick=()=>{const t=getTrack("a");if(!t)return;t.enabled=!t.enabled;$("mic").textContent=t.enabled?"Mic on":"Mic off"};
+$("cam").onclick=()=>{const t=getTrack("v");if(!t)return;t.enabled=!t.enabled;$("cam").textContent=t.enabled?"Camera on":"Camera off"};
+$("fs").onclick=()=>{if(document.fullscreenElement)return document.exitFullscreen();const v=$("videos"),r=$("remote");if(v.requestFullscreen)v.requestFullscreen();else if(r.webkitEnterFullscreen)r.webkitEnterFullscreen()};
+$("snd").onclick=()=>{snd=!snd;$("snd").textContent=snd?"Sound on":"Sound off"};
+$("emo").onclick=()=>$("emojis").classList.toggle("open");
+"😀 😂 😍 😎 😢 😡 👍 👋 🙏 🔥 🎉 🤔 😅 🙌 😴 🎵".split(" ").forEach(e=>{const b=document.createElement("button");b.type="button";b.textContent=e;b.onclick=()=>{$("msg").value+=e;$("msg").focus()};$("emojis").appendChild(b)});
+/* install as app */
+let deferred;addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;$("inst").style.display=""});
+$("inst").onclick=ev=>{ev.preventDefault();if(deferred){deferred.prompt();deferred=null;$("inst").style.display="none"}};
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
 </body>
 </html>
